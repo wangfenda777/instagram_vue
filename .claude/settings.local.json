@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mv index.scss index.css)",
+      "Bash(mv theme.scss theme.css)",
+      "Bash(mv common.scss common.css)",
+      "Bash(npm view:*)",
+      "Bash(cp -r src/assets/images/avatar src/static/images/avatar)",
+      "Bash(cp -r src/assets/images/home src/static/images/home)"
+    ]
+  }
+}

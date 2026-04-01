@@ -1,0 +1,77 @@
+{
+  "pages": [
+    {
+      "path": "pages/home/home",
+      "style": {
+        "navigationBarTitleText": "首页"
+      }
+    },
+    {
+      "path": "pages/explore/explore",
+      "style": {
+        "navigationBarTitleText": "探索"
+      }
+    },
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "登录"
+      }
+    },
+    {
+      "path": "pages/publish/publish",
+      "style": {
+        "navigationBarTitleText": "发布"
+      }
+    },
+    {
+      "path": "pages/messages/messages",
+      "style": {
+        "navigationBarTitleText": "消息"
+      }
+    },
+    {
+      "path": "pages/profile/profile",
+      "style": {
+        "navigationBarTitleText": "我的"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationStyle": "custom",
+    "backgroundColor": "#FFFFFF"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#000000",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "iconPath": "static/icons/home.svg",
+        "selectedIconPath": "static/icons/home-selected.svg"
+      },
+      {
+        "pagePath": "pages/explore/explore",
+        "iconPath": "static/icons/direction.svg",
+        "selectedIconPath": "static/icons/direction-select.svg"
+      },
+      {
+        "pagePath": "pages/publish/publish",
+        "iconPath": "static/icons/add.svg",
+        "selectedIconPath": "static/icons/add.svg"
+      },
+      {
+        "pagePath": "pages/messages/messages",
+        "iconPath": "static/icons/video.svg",
+        "selectedIconPath": "static/icons/video-selected.svg"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "iconPath": "static/icons/my-selected.svg",
+        "selectedIconPath": "static/icons/my-selected.svg"
+      }
+    ]
+  }
+}

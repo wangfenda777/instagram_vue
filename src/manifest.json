@@ -1,0 +1,35 @@
+{
+  "name": "instagram-app",
+  "appid": "__UNI__XXXXXX",
+  "description": "类 Instagram App",
+  "versionName": "1.0.0",
+  "versionCode": "100",
+  "app-plus": {
+    "usingComponents": true,
+    "nvueStyleCompiler": "uni-app",
+    "compilerVersion": 3,
+    "splashscreen": {
+      "alwaysShowBeforeRender": true,
+      "waiting": true,
+      "autoclose": true,
+      "delay": 0
+    },
+    "modules": {},
+    "distribute": {
+      "ios": {
+        "dSYMs": false
+      }
+    }
+  },
+  "quickapp": {},
+  "mp-weixin": {
+    "appid": "",
+    "setting": {
+      "urlCheck": false
+    },
+    "usingComponents": true
+  },
+  "h5": {
+    "title": "Instagram"
+  }
+}
