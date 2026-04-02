@@ -208,14 +208,28 @@ export const usePageName = () => {
 
 ---
 
-## 四、接口文档规范
+## 四、接口请求规范
 
-### 4.1 文档命名与位置
+### 4.1 请求参数传递规则
+
+- **GET 请求**：所有参数拼接在 URL 后面作为 Query 参数，不使用路径参数（Path Params）
+  - 正确：`GET /api/user/info?userId=1001`
+  - 错误：`GET /api/user/1001`、`GET /api/user/:userId`
+- **POST 请求**：所有参数放在请求体（Request Body）中，使用 JSON 格式
+  - 正确：`POST /api/user/follow`，Body: `{ "userId": "1001" }`
+  - 错误：`POST /api/user/1001/follow`
+- **不使用 PUT / DELETE 方法**：统一使用 POST 替代，通过不同的路径区分操作
+  - 关注：`POST /api/user/follow`
+  - 取消关注：`POST /api/user/unfollow`
+  - 点赞：`POST /api/post/like`
+  - 取消点赞：`POST /api/post/unlike`
+
+### 4.2 文档命名与位置
 - 与页面模块同名，后缀 `.md`
 - 统一放在 `src/doc/` 目录下
 - 示例：`src/doc/login.md`、`src/doc/profile.md`
 
-### 4.2 标准文档模板
+### 4.3 标准文档模板
 
 ```markdown
 # 页面名称 - 接口文档
