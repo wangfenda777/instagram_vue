@@ -6,7 +6,8 @@
       "Bash(mv common.scss common.css)",
       "Bash(npm view:*)",
       "Bash(cp -r src/assets/images/avatar src/static/images/avatar)",
-      "Bash(cp -r src/assets/images/home src/static/images/home)"
+      "Bash(cp -r src/assets/images/home src/static/images/home)",
+      "Bash(npm run:*)"
     ]
   }
 }

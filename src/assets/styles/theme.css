@@ -1,9 +1,9 @@
 /* 主题色配置 - 使用 CSS 变量 */
 :root {
   --theme-primary: #000000;
-  --theme-secondary: #999999;
+  --theme-secondary: #f0f0f0;
   --theme-bg: #FFFFFF;
-  --theme-border: #DBDBDB;
+  --theme-border: #f1f1f1;
   --theme-error: #ED4956;
   --theme-link: #0095F6;
   --page-bg: #ffffff;
