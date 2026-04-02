@@ -9,10 +9,10 @@
       </view>
       <view class="header-right">
         <view class="icon-wrap">
-          <text class="icon-heart">&#x2661;</text>
+          <image class="header-icon" src="/static/icons/like.svg" mode="aspectFit" />
           <view class="notification-dot" />
         </view>
-        <text class="icon-send">&#x27A4;</text>
+        <image class="header-icon" src="/static/icons/airport.svg" mode="aspectFit" />
       </view>
     </view>
 
@@ -46,7 +46,10 @@
         <view class="post-user">
           <image class="post-avatar" :src="post.avatar" mode="aspectFill" />
           <view class="post-user-info">
-            <text class="post-username">{{ post.username }}</text>
+            <view class="post-name-wrap">
+              <text class="post-username">{{ post.username }}</text>
+              <image class="vip-icon" src="/static/icons/vip.svg" mode="aspectFit" />
+            </view>
             <text class="post-location">{{ post.location }}</text>
           </view>
         </view>
@@ -67,15 +70,15 @@
       <view class="post-actions">
         <view class="actions-left">
           <view class="action-item">
-            <text class="action-icon">&#x2661;</text>
+            <image class="action-icon-img" src="/static/icons/like.svg" mode="aspectFit" />
             <text class="action-count">{{ post.likes }}</text>
           </view>
           <view class="action-item">
-            <text class="action-icon">&#x1F4AC;</text>
+            <image class="action-icon-img" src="/static/icons/talk.svg" mode="aspectFit" />
             <text class="action-count">{{ post.comments }}</text>
           </view>
           <view class="action-item">
-            <text class="action-icon">&#x27A4;</text>
+            <image class="action-icon-img" src="/static/icons/airport.svg" mode="aspectFit" />
             <text class="action-count">{{ post.shares }}</text>
           </view>
         </view>
@@ -147,8 +150,9 @@ const { stories, posts } = useHome()
   position: relative;
 }
 
-.icon-heart {
-  font-size: 48rpx;
+.header-icon {
+  width: 48rpx;
+  height: 48rpx;
 }
 
 .notification-dot {
@@ -159,10 +163,6 @@ const { stories, posts } = useHome()
   height: 14rpx;
   background-color: var(--theme-error);
   border-radius: 50%;
-}
-
-.icon-send {
-  font-size: 44rpx;
 }
 
 /* ===== Stories ===== */
@@ -280,10 +280,21 @@ const { stories, posts } = useHome()
   flex-direction: column;
 }
 
+.post-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
 .post-username {
   font-size: 26rpx;
   font-weight: 600;
   color: var(--text-color);
+}
+
+.vip-icon {
+  width: 22rpx;
+  height: 22rpx;
 }
 
 .post-location {
@@ -338,6 +349,11 @@ const { stories, posts } = useHome()
   display: flex;
   align-items: center;
   gap: 8rpx;
+}
+
+.action-icon-img {
+  width: 44rpx;
+  height: 44rpx;
 }
 
 .action-icon {
