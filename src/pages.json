@@ -1,7 +1,7 @@
 {
   "pages": [
     {
-      "path": "pages/home/home",
+      "path": "pages/index/index",
       "style": {
         "navigationBarTitleText": "首页"
       }
@@ -48,7 +48,7 @@
     "borderStyle": "black",
     "list": [
       {
-        "pagePath": "pages/home/home",
+        "pagePath": "pages/index/index",
         "iconPath": "static/icons/home.svg",
         "selectedIconPath": "static/icons/home-selected.svg"
       },
