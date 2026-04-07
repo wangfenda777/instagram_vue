@@ -1,35 +1,36 @@
 import { ref } from 'vue'
+import { login as loginApi } from '@/api/auth.js'
+import { useUserStore } from '@/pinia/modules/userStore.js'
 
 export const useLogin = () => {
   const isLoggedIn = ref(false)
-  const token = ref('')
 
-  const login = (username, password) => {
-    if (username && password) {
-      token.value = 'mock_token_' + Date.now()
-      isLoggedIn.value = true
-      
-      uni.setStorageSync('token', token.value)
-      uni.setStorageSync('isLoggedIn', true)
-      
-      uni.switchTab({
-        url: '/pages/index/index'
-      })
+  const login = async (account, password) => {
+    if (account && password) {
+      try {
+        const res = await loginApi({ account, password })
+        const userStore = useUserStore()
+        userStore.setAuth(res)
+        isLoggedIn.value = true
+
+        uni.switchTab({
+          url: '/pages/index/index'
+        })
+      } catch (e) {
+        // 接口封装层已有 toast 提示
+      }
     }
   }
 
   const logout = () => {
-    token.value = ''
+    const userStore = useUserStore()
+    userStore.clearAuth()
     isLoggedIn.value = false
-    uni.removeStorageSync('token')
-    uni.removeStorageSync('isLoggedIn')
   }
 
   const checkLogin = () => {
-    const storedToken = uni.getStorageSync('token')
-    const storedIsLoggedIn = uni.getStorageSync('isLoggedIn')
-    if (storedToken && storedIsLoggedIn) {
-      token.value = storedToken
+    const userStore = useUserStore()
+    if (userStore.token) {
       isLoggedIn.value = true
       return true
     }
@@ -38,7 +39,6 @@ export const useLogin = () => {
 
   return {
     isLoggedIn,
-    token,
     login,
     logout,
     checkLogin

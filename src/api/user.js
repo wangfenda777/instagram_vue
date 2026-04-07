@@ -1,19 +1,81 @@
 import { request } from './index.js'
 
-// 用户登录
-export const login = (data) => {
+// 获取当前用户基础信息
+export const getUserMe = () => {
   return request({
-    url: '/api/user/login',
-    method: 'POST',
-    data
+    url: '/api/user/me',
+    method: 'GET'
   })
 }
 
-// 获取用户信息
+// 获取指定用户基础信息
 export const getUserInfo = (userId) => {
   return request({
     url: '/api/user/info',
     method: 'GET',
     data: { userId }
+  })
+}
+
+// 获取用户统计信息
+export const getUserStats = (userId) => {
+  return request({
+    url: '/api/user/stats',
+    method: 'GET',
+    data: { userId }
+  })
+}
+
+// 关注用户
+export const followUser = (data) => {
+  return request({
+    url: '/api/user/follow',
+    method: 'POST',
+    data
+  })
+}
+
+// 取消关注
+export const unfollowUser = (data) => {
+  return request({
+    url: '/api/user/unfollow',
+    method: 'POST',
+    data
+  })
+}
+
+// 获取用户帖子列表（网格）
+export const getUserPosts = (userId, page = 1, pageSize = 18) => {
+  return request({
+    url: '/api/user/posts',
+    method: 'GET',
+    data: { userId, page, pageSize }
+  })
+}
+
+// 获取用户视频列表（Reels）
+export const getUserReels = (userId, page = 1, pageSize = 18) => {
+  return request({
+    url: '/api/user/reels',
+    method: 'GET',
+    data: { userId, page, pageSize }
+  })
+}
+
+// 获取推荐用户列表
+export const getDiscoverUsers = (limit = 10) => {
+  return request({
+    url: '/api/user/discover',
+    method: 'GET',
+    data: { limit }
+  })
+}
+
+// 编辑用户资料
+export const updateProfile = (data) => {
+  return request({
+    url: '/api/user/profile/update',
+    method: 'POST',
+    data
   })
 }

@@ -59,7 +59,9 @@ const canLogin = computed(() => {
 
 const handleLogin = () => {
   if (canLogin.value) {
+    // login(username.value, password.value)
     login(username.value, password.value)
+
   }
 }
 </script>

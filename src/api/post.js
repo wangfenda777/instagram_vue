@@ -1,0 +1,55 @@
+import { request } from './index.js'
+
+// 获取首页帖子 Feed 流
+export const getPostFeed = (page = 1, pageSize = 10) => {
+  return request({
+    url: '/api/post/feed',
+    method: 'GET',
+    data: { page, pageSize }
+  })
+}
+
+// 获取帖子详情
+export const getPostDetail = (postId) => {
+  return request({
+    url: '/api/post/detail',
+    method: 'GET',
+    data: { postId }
+  })
+}
+
+// 帖子点赞
+export const likePost = (data) => {
+  return request({
+    url: '/api/post/like',
+    method: 'POST',
+    data
+  })
+}
+
+// 取消点赞
+export const unlikePost = (data) => {
+  return request({
+    url: '/api/post/unlike',
+    method: 'POST',
+    data
+  })
+}
+
+// 收藏帖子
+export const savePost = (data) => {
+  return request({
+    url: '/api/post/save',
+    method: 'POST',
+    data
+  })
+}
+
+// 取消收藏
+export const unsavePost = (data) => {
+  return request({
+    url: '/api/post/unsave',
+    method: 'POST',
+    data
+  })
+}
