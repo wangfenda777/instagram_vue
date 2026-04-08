@@ -118,7 +118,7 @@ const appStore = useAppStore()
 
 const myAvatar = computed(() => {
   if (userStore.userInfo?.avatar) {
-    return appStore.baseUrl + userStore.userInfo.avatar
+    return userStore.userInfo.avatar
   }
   return '/static/images/avatar/1.jpg'
 })
