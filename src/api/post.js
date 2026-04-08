@@ -53,3 +53,30 @@ export const unsavePost = (data) => {
     data
   })
 }
+
+// 发布帖子
+export const createPost = (data) => {
+  return request({
+    url: '/api/post/create',
+    method: 'POST',
+    data
+  })
+}
+
+// 编辑帖子
+export const updatePost = (data) => {
+  return request({
+    url: '/api/post/update',
+    method: 'POST',
+    data
+  })
+}
+
+// 删除帖子
+export const deletePost = (data) => {
+  return request({
+    url: '/api/post/delete',
+    method: 'POST',
+    data
+  })
+}
