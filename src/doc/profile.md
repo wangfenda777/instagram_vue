@@ -244,3 +244,128 @@
 ├── 编辑资料: POST /api/user/profile/update
 └── 上传头像: POST /api/upload/avatar
 ```
+
+
+## 3. 获取用户粉丝列表
+
+### 请求信息
+- **接口地址**: `GET /api/user/followers?userId=1001&page=1&pageSize=20`
+- **接口说明**: 获取指定用户的粉丝列表，用于个人主页粉丝弹窗/粉丝列表页展示。
+
+### 请求头
+| 参数名 | 类型 | 必填 | 说明 |
+|-------|------|------|------|
+| Authorization | string | 是 | Bearer {token} |
+
+### 请求参数（Query）
+| 参数名 | 类型 | 必填 | 说明 | 默认值 |
+|-------|------|------|------|-------|
+| userId | string | 是 | 用户 ID | - |
+| page | number | 否 | 页码 | 1 |
+| pageSize | number | 否 | 每页数量 | 20 |
+
+### 响应数据
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "list": [
+      {
+        "userId": "1002",
+        "username": "kaihavertz29",
+        "displayName": "Kai Havertz",
+        "avatar": "https://cdn.example.com/avatar/2.jpg",
+        "isVerified": true,
+        "isFollowing": true
+      },
+      {
+        "userId": "1003",
+        "username": "messi10",
+        "displayName": "Lionel Messi",
+        "avatar": "https://cdn.example.com/avatar/3.jpg",
+        "isVerified": true,
+        "isFollowing": false
+      }
+    ],
+    "total": 2,
+    "page": 1,
+    "pageSize": 20,
+    "hasMore": false
+  }
+}
+```
+
+### 响应字段说明
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| userId | string | 用户 ID |
+| username | string | 用户名 |
+| displayName | string | 显示名称 |
+| avatar | string | 头像 URL |
+| isVerified | boolean | 是否认证 |
+| isFollowing | boolean | 当前登录用户是否已关注该用户 |
+
+---
+
+## 4. 获取用户关注列表
+
+### 请求信息
+- **接口地址**: `GET /api/user/following?userId=1001&page=1&pageSize=20`
+- **接口说明**: 获取指定用户的关注列表，用于个人主页关注弹窗/关注列表页展示。
+
+### 请求头
+| 参数名 | 类型 | 必填 | 说明 |
+|-------|------|------|------|
+| Authorization | string | 是 | Bearer {token} |
+
+### 请求参数（Query）
+| 参数名 | 类型 | 必填 | 说明 | 默认值 |
+|-------|------|------|------|-------|
+| userId | string | 是 | 用户 ID | - |
+| page | number | 否 | 页码 | 1 |
+| pageSize | number | 否 | 每页数量 | 20 |
+
+### 响应数据
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "list": [
+      {
+        "userId": "1004",
+        "username": "neymarjr",
+        "displayName": "Neymar Jr",
+        "avatar": "https://cdn.example.com/avatar/4.jpg",
+        "isVerified": true,
+        "isFollowing": true
+      },
+      {
+        "userId": "1005",
+        "username": "haaland9",
+        "displayName": "Erling Haaland",
+        "avatar": "https://cdn.example.com/avatar/5.jpg",
+        "isVerified": false,
+        "isFollowing": false
+      }
+    ],
+    "total": 8,
+    "page": 1,
+    "pageSize": 20,
+    "hasMore": false
+  }
+}
+```
+
+### 响应字段说明
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| userId | string | 用户 ID |
+| username | string | 用户名 |
+| displayName | string | 显示名称 |
+| avatar | string | 头像 URL |
+| isVerified | boolean | 是否认证 |
+| isFollowing | boolean | 当前登录用户是否已关注该用户 |
+
+---

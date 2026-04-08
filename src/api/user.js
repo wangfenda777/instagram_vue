@@ -71,6 +71,24 @@ export const getDiscoverUsers = (limit = 10) => {
   })
 }
 
+// 获取粉丝列表
+export const getUserFollowers = (userId, page = 1, pageSize = 20) => {
+  return request({
+    url: '/api/user/followers',
+    method: 'GET',
+    data: { userId, page, pageSize }
+  })
+}
+
+// 获取关注列表
+export const getUserFollowing = (userId, page = 1, pageSize = 20) => {
+  return request({
+    url: '/api/user/following',
+    method: 'GET',
+    data: { userId, page, pageSize }
+  })
+}
+
 // 编辑用户资料
 export const updateProfile = (data) => {
   return request({

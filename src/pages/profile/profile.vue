@@ -36,11 +36,11 @@
               <text class="stat-number">{{ userInfo.posts }}</text>
               <text class="stat-label">帖子</text>
             </view>
-            <view class="stat-item">
+            <view class="stat-item" @click="goFollowList(0)">
               <text class="stat-number">{{ userInfo.followers }}</text>
               <text class="stat-label">粉丝</text>
             </view>
-            <view class="stat-item">
+            <view class="stat-item" @click="goFollowList(1)">
               <text class="stat-number">{{ userInfo.following }}</text>
               <text class="stat-label">已关注</text>
             </view>
@@ -188,6 +188,21 @@ const {
 
 const goEditProfile = () => {
   uni.navigateTo({ url: '/pages/profile/edit-profile' })
+}
+
+const goFollowList = (tab) => {
+  const info = userInfo.value || {}
+  const query = [
+    `userId=${encodeURIComponent(info.userId || '')}`,
+    `username=${encodeURIComponent(info.username || '')}`,
+    `followers=${encodeURIComponent(info.followers || 0)}`,
+    `following=${encodeURIComponent(info.following || 0)}`,
+    `tab=${tab}`
+  ].join('&')
+
+  uni.navigateTo({
+    url: `/pages/profile/follow-list?${query}`
+  })
 }
 </script>
 

@@ -90,6 +90,7 @@ const getAvatarUrl = (avatar) => {
 
       const stats = await getUserStats(userId)
       userInfo.value = {
+        userId,
         username: info.username || '',
         displayName: info.displayName || '',
         avatar: getAvatarUrl(info.avatar),
@@ -103,6 +104,7 @@ const getAvatarUrl = (avatar) => {
       // 失败时使用 pinia 中的基础信息
       const info = userStore.userInfo || {}
       userInfo.value = {
+        userId: info.userId || '',
         username: info.username || '',
         displayName: info.displayName || '',
         avatar: getAvatarUrl(info.avatar),

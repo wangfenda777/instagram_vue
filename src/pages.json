@@ -47,6 +47,12 @@
       "style": {
         "navigationBarTitleText": "编辑"
       }
+    },
+    {
+      "path": "pages/profile/follow-list",
+      "style": {
+        "navigationBarTitleText": "粉丝与关注"
+      }
     }
   ],
   "globalStyle": {
