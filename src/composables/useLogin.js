@@ -1,6 +1,8 @@
 import { ref } from 'vue'
 import { login as loginApi } from '@/api/auth.js'
+import { getUserMe } from '@/api/user.js'
 import { useUserStore } from '@/pinia/modules/userStore.js'
+import { useAppStore } from '@/pinia/modules/appStore.js'
 
 export const useLogin = () => {
   const isLoggedIn = ref(false)
@@ -12,6 +14,19 @@ export const useLogin = () => {
         const userStore = useUserStore()
         userStore.setAuth(res)
         isLoggedIn.value = true
+
+        // 登录成功后获取用户信息
+        try {
+          const appStore = useAppStore()
+          const userInfo = await getUserMe()
+          // 头像拼接服务器地址
+          if (userInfo.avatar) {
+            userInfo.avatar = appStore.baseUrl + userInfo.avatar
+          }
+          userStore.setUserInfo(userInfo)
+        } catch (e) {
+          console.error('获取用户信息失败', e)
+        }
 
         uni.switchTab({
           url: '/pages/index/index'

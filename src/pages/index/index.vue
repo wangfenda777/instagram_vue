@@ -21,7 +21,7 @@
       <!-- 自己的快拍 -->
       <view class="story-item">
         <view class="story-avatar-wrap story-mine">
-          <image class="story-avatar" src="/static/images/avatar/1.jpg" mode="aspectFill" />
+          <image class="story-avatar" :src="myAvatar" mode="aspectFill" />
           <view class="story-add">
             <text class="story-add-icon">+</text>
           </view>
@@ -54,7 +54,7 @@
           </view>
         </view>
         <view class="post-header-right">
-          <view class="follow-btn" v-if="post.showFollow">
+          <view class="follow-btn" v-if="post.showFollow" @click="handleFollow(post.id)">
             <text class="follow-text">关注</text>
           </view>
           <text class="post-more">•••</text>
@@ -108,8 +108,20 @@
 import Layout from '@/components/common/Layout.vue'
 import ImageSwiper from '@/components/common/ImageSwiper.vue'
 import { useHome } from '@/composables/useHome'
+import { useUserStore } from '@/pinia/modules/userStore.js'
+import { useAppStore } from '@/pinia/modules/appStore.js'
+import { computed } from 'vue'
 
-const { stories, posts } = useHome()
+const { stories, posts, handleFollow } = useHome()
+const userStore = useUserStore()
+const appStore = useAppStore()
+
+const myAvatar = computed(() => {
+  if (userStore.userInfo?.avatar) {
+    return appStore.baseUrl + userStore.userInfo.avatar
+  }
+  return '/static/images/avatar/1.jpg'
+})
 </script>
 
 <style scoped>

@@ -51,7 +51,7 @@
 
 
       <view class="action-buttons">
-        <view class="btn btn-primary">编辑主页</view>
+        <view class="btn btn-primary" @click="goEditProfile">编辑主页</view>
         <view class="btn btn-primary">分享主页</view>
         <view class="btn btn-icon">
           <image src="/static/icons/direction.svg" mode="aspectFit" />
@@ -185,6 +185,10 @@ const {
   removeDiscoverUser,
   switchTab
 } = useProfile()
+
+const goEditProfile = () => {
+  uni.navigateTo({ url: '/pages/profile/edit-profile' })
+}
 </script>
 
 <style scoped>

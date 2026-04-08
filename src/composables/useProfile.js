@@ -1,65 +1,31 @@
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { getUserStats, getDiscoverUsers, getUserPosts, followUser as followUserApi, unfollowUser as unfollowUserApi } from '@/api/user.js'
+import { useUserStore } from '@/pinia/modules/userStore.js'
+import { useAppStore } from '@/pinia/modules/appStore.js'
 
 export function useProfile() {
-  // 用户信息
+  const userStore = useUserStore()
+  const appStore = useAppStore()
+
+  // 用户信息（从 pinia 读取）
   const userInfo = ref({
-    username: 'qiwang6189',
-    displayName: 'Qi Wang',
-    avatar: '/static/images/avatar/1.jpg',
-    posts: 1,
-    followers: 9,
-    following: 44,
-    hasNotification: true
+    username: '',
+    displayName: '',
+    avatar: '',
+    posts: 0,
+    followers: 0,
+    following: 0,
+    hasNotification: false
   })
 
   // 发现用户列表
-  const discoverUsers = ref([
-    {
-      id: 1,
-      username: 'user_one',
-      avatar: '/static/images/avatar/2.jpg',
-      tag: '为你推荐',
-      isFollowing: false
-    },
-    {
-      id: 2,
-      username: 'user_two',
-      avatar: '/static/images/avatar/3.jpg',
-      tag: '为你推荐',
-      isFollowing: false
-    },
-    {
-      id: 3,
-      username: 'user_three',
-      avatar: '/static/images/avatar/4.jpg',
-      tag: '为你推荐',
-      isFollowing: false
-    },
-    {
-      id: 4,
-      username: 'user_four',
-      avatar: '/static/images/avatar/5.jpg',
-      tag: '为你推荐',
-      isFollowing: false
-    },
-    {
-      id: 5,
-      username: 'user_five',
-      avatar: '/static/images/avatar/2.jpg',
-      tag: '为你推荐',
-      isFollowing: false
-    }
-  ])
+  const discoverUsers = ref([])
 
   // 当前选中的tab
   const activeTab = ref(0)
 
   // 用户帖子（图片网格）
-  const userPosts = ref([
-    { id: 1, image: '/static/images/home/1.jpg', type: 'image' },
-    { id: 2, image: '/static/images/home/2.jpg', type: 'image' },
-    { id: 3, image: '/static/images/home/3.jpg', type: 'image' }
-  ])
+  const userPosts = ref([])
 
   // 用户视频
   const userVideos = ref([
@@ -72,7 +38,6 @@ export function useProfile() {
     { id: 1, image: '/static/images/home/6.jpg' },
     { id: 2, image: '/static/images/home/7.jpg' }
   ])
-
 
   // 完善主页任务
   const profileTasks = ref([
@@ -110,11 +75,93 @@ export function useProfile() {
     }
   ])
 
+  // 拼接头像地址
+const getAvatarUrl = (avatar) => {
+  if (!avatar) return '/static/images/avatar/1.jpg'
+  return avatar.startsWith('http') ? avatar : appStore.baseUrl + avatar
+}
+
+// 获取用户统计数据
+  const fetchUserStats = async () => {
+    try {
+      const info = userStore.userInfo || {}
+      const userId = info.userId
+      if (!userId) return
+
+      const stats = await getUserStats(userId)
+      userInfo.value = {
+        username: info.username || '',
+        displayName: info.displayName || '',
+        avatar: getAvatarUrl(info.avatar),
+        posts: stats.postsCount || 0,
+        followers: stats.followersCount || 0,
+        following: stats.followingCount || 0,
+        hasNotification: false
+      }
+    } catch (e) {
+      console.error('获取用户统计失败', e)
+      // 失败时使用 pinia 中的基础信息
+      const info = userStore.userInfo || {}
+      userInfo.value = {
+        username: info.username || '',
+        displayName: info.displayName || '',
+        avatar: getAvatarUrl(info.avatar),
+        posts: 0,
+        followers: 0,
+        following: 0,
+        hasNotification: false
+      }
+    }
+  }
+
+  // 获取推荐用户列表
+  const fetchDiscoverUsers = async () => {
+    try {
+      const data = await getDiscoverUsers(5)
+      discoverUsers.value = data.map(item => ({
+        id: item.userId,
+        username: item.username,
+        avatar: appStore.baseUrl + item.avatar,
+        tag: item.tag || '为你推荐',
+        isFollowing: item.isFollowing || false
+      }))
+    } catch (e) {
+      console.error('获取推荐用户失败', e)
+    }
+  }
+
+  // 获取用户帖子列表
+  const fetchUserPosts = async () => {
+    try {
+      const info = userStore.userInfo || {}
+      if (!info.userId) return
+      const data = await getUserPosts(info.userId)
+      userPosts.value = data.list.map(item => ({
+        id: item.postId,
+        image: appStore.baseUrl + item.coverUrl,
+        type: item.mediaType,
+        mediaCount: item.mediaCount
+      }))
+    } catch (e) {
+      console.error('获取用户帖子失败', e)
+    }
+  }
+
   // 关注用户
-  const followUser = (userId) => {
+  const followUser = async (userId) => {
     const user = discoverUsers.value.find(u => u.id === userId)
-    if (user) {
-      user.isFollowing = !user.isFollowing
+    if (!user) return
+
+    try {
+      if (user.isFollowing) {
+        await unfollowUserApi({ userId })
+        user.isFollowing = false
+      } else {
+        await followUserApi({ userId })
+        user.isFollowing = true
+      }
+    } catch (e) {
+      console.error('关注操作失败', e)
     }
   }
 
@@ -130,6 +177,12 @@ export function useProfile() {
   const switchTab = (index) => {
     activeTab.value = index
   }
+
+  onMounted(() => {
+    fetchUserStats()
+    fetchDiscoverUsers()
+    fetchUserPosts()
+  })
 
   return {
     userInfo,

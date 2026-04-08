@@ -1,6 +1,7 @@
 import { ref, onMounted } from 'vue'
 import { getStoryFeed } from '@/api/story.js'
 import { getPostFeed } from '@/api/post.js'
+import { followUser as followUserApi } from '@/api/user.js'
 import { useAppStore } from '@/pinia/modules/appStore.js'
 
 export function useHome() {
@@ -36,6 +37,7 @@ export function useHome() {
       const data = await getPostFeed(page.value)
       const list = data.list.map(item => ({
         id: item.postId,
+        userId: item.userId,
         username: item.username,
         location: item.location,
         avatar: appStore.baseUrl + item.avatar,
@@ -60,12 +62,24 @@ export function useHome() {
     }
   }
 
+  // 关注用户
+  const handleFollow = async (postId) => {
+    const post = posts.value.find(p => p.id === postId)
+    if (!post) return
+    try {
+      await followUserApi({ userId: post.userId })
+      post.showFollow = false
+    } catch (e) {
+      console.error('关注失败', e)
+    }
+  }
+
   onMounted(() => {
     fetchStories()
     fetchPosts()
   })
 
-  return { stories, posts, hasMore, loading, fetchPosts }
+  return { stories, posts, hasMore, loading, fetchPosts, handleFollow }
 }
 
 function formatCount(num) {
