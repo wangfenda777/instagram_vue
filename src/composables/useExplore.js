@@ -1,6 +1,11 @@
 import { ref, computed } from 'vue'
+import { searchTag, searchUser } from '@/api/search.js'
+import { useAppStore } from '@/pinia/modules/appStore.js'
+
+const SEARCH_DEBOUNCE_DELAY = 350
 
 export function useExplore() {
+  const appStore = useAppStore()
   const exploreList = ref([
     { id: 1, type: 'image', images: ['/static/images/home/1.jpg'], width: 1, height: 1 },
     { id: 2, type: 'video', video: '/static/video/1.mp4', cover: '/static/images/home/2.jpg', width: 1, height: 2 },
@@ -29,6 +34,129 @@ export function useExplore() {
   ])
 
   const searchKeyword = ref('')
+  const isSearchMode = ref(false)
+  const isSearching = ref(false)
+  const hasSearched = ref(false)
+  const searchError = ref('')
+  const tagResults = ref([])
+  const userResults = ref([])
+
+  let searchTimer = null
+  let activeRequestId = 0
+
+  const getAvatarUrl = (avatar) => {
+    if (!avatar) return '/static/images/avatar/1.jpg'
+    return avatar.startsWith('http') ? avatar : appStore.baseUrl + avatar
+  }
+
+  const getList = (payload) => {
+    if (Array.isArray(payload)) return payload
+    if (Array.isArray(payload?.list)) return payload.list
+    return []
+  }
+
+  const normalizeTag = (item = {}) => ({
+    id: item.tagId || item.id || item.tagName || item.name || '',
+    name: item.tagName || item.name || '',
+    postCount: Number(item.postCount || item.count || item.noteCount || 0),
+    cover: item.cover || item.coverUrl || item.thumbnail || ''
+  })
+
+  const normalizeUser = (item = {}) => ({
+    id: item.userId || item.id || '',
+    username: item.username || '',
+    displayName: item.displayName || item.bio || '',
+    avatar: getAvatarUrl(item.avatar),
+    isVerified: Boolean(item.isVerified)
+  })
+
+  const clearSearchResult = () => {
+    tagResults.value = []
+    userResults.value = []
+    searchError.value = ''
+  }
+
+  const runSearch = async () => {
+    const keyword = searchKeyword.value.trim()
+    const requestId = ++activeRequestId
+
+    if (!keyword) {
+      isSearching.value = false
+      hasSearched.value = false
+      clearSearchResult()
+      return
+    }
+
+    isSearching.value = true
+    searchError.value = ''
+    hasSearched.value = true
+
+    const [tagResult, userResult] = await Promise.allSettled([
+      searchTag(keyword),
+      searchUser(keyword)
+    ])
+
+    if (requestId !== activeRequestId) return
+
+    const nextTags = tagResult.status === 'fulfilled'
+      ? getList(tagResult.value).map(normalizeTag)
+      : []
+    const nextUsers = userResult.status === 'fulfilled'
+      ? getList(userResult.value).map(normalizeUser)
+      : []
+
+    tagResults.value = nextTags
+    userResults.value = nextUsers
+
+    if (tagResult.status === 'rejected' && userResult.status === 'rejected') {
+      searchError.value = '搜索失败，请稍后重试'
+    }
+
+    isSearching.value = false
+  }
+
+  const scheduleSearch = () => {
+    if (searchTimer) {
+      clearTimeout(searchTimer)
+    }
+
+    const keyword = searchKeyword.value.trim()
+    if (!keyword) {
+      activeRequestId += 1
+      isSearching.value = false
+      hasSearched.value = false
+      clearSearchResult()
+      return
+    }
+
+    searchTimer = setTimeout(() => {
+      runSearch()
+    }, SEARCH_DEBOUNCE_DELAY)
+  }
+
+  const enterSearchMode = () => {
+    isSearchMode.value = true
+  }
+
+  const cancelSearch = () => {
+    if (searchTimer) {
+      clearTimeout(searchTimer)
+      searchTimer = null
+    }
+    activeRequestId += 1
+    searchKeyword.value = ''
+    isSearchMode.value = false
+    isSearching.value = false
+    hasSearched.value = false
+    clearSearchResult()
+  }
+
+  const handleSearchInput = () => {
+    if (!isSearchMode.value) {
+      enterSearchMode()
+    }
+    scheduleSearch()
+  }
 
   // 瀑布流分列
   const column1 = computed(() => {
@@ -65,7 +193,12 @@ export function useExplore() {
   })
 
   function handleSearch() {
-    console.log('搜索:', searchKeyword.value)
+    enterSearchMode()
+    if (searchTimer) {
+      clearTimeout(searchTimer)
+      searchTimer = null
+    }
+    runSearch()
   }
 
   return {
@@ -74,6 +207,15 @@ export function useExplore() {
     column2,
     column3,
     searchKeyword,
+    isSearchMode,
+    isSearching,
+    hasSearched,
+    searchError,
+    tagResults,
+    userResults,
+    enterSearchMode,
+    cancelSearch,
+    handleSearchInput,
     handleSearch
   }
 }
