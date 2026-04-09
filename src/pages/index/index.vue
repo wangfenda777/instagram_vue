@@ -88,7 +88,7 @@
             <text class="action-count">{{ post.shares }}</text>
           </view>
         </view>
-        <view class="actions-right" :class="{ 'feedback-saved-surface': post.isSaved, 'feedback-save-animating': post.saveAnimating }" @click="handleToggleSave(post.id)">
+        <view class="actions-right" :class="{ 'feedback-save-animating': post.saveAnimating }" @click="handleToggleSave(post.id)">
           <view class="save-action-inner feedback-save-inner">
             <image
               class="action-icon-img"
