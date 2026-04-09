@@ -69,9 +69,15 @@
       <!-- 操作栏 -->
       <view class="post-actions">
         <view class="actions-left">
-          <view class="action-item">
-            <image class="action-icon-img" src="/static/icons/like.svg" mode="aspectFit" />
-            <text class="action-count">{{ post.likes }}</text>
+          <view class="action-item" @click="handleToggleLike(post.id)">
+            <view class="action-icon-wrap" :class="{ 'feedback-like-animating': post.likeAnimating }">
+              <image
+                class="action-icon-img"
+                :src="post.isLiked ? '/static/icons/like_selected.svg' : '/static/icons/like.svg'"
+                mode="aspectFit"
+              />
+            </view>
+            <text class="action-count" :class="{ 'feedback-liked-count': post.isLiked }">{{ post.likes }}</text>
           </view>
           <view class="action-item">
             <image class="action-icon-img" src="/static/icons/talk.svg" mode="aspectFit" />
@@ -82,8 +88,14 @@
             <text class="action-count">{{ post.shares }}</text>
           </view>
         </view>
-        <view class="actions-right">
-          <text class="action-icon">&#x2630;</text>
+        <view class="actions-right" :class="{ 'feedback-saved-surface': post.isSaved, 'feedback-save-animating': post.saveAnimating }" @click="handleToggleSave(post.id)">
+          <view class="save-action-inner feedback-save-inner">
+            <image
+              class="action-icon-img"
+              :src="post.isSaved ? '/static/icons/collect_selected.svg' : '/static/icons/collect.svg'"
+              mode="aspectFit"
+            />
+          </view>
         </view>
       </view>
 
@@ -118,7 +130,7 @@ import { useUserStore } from '@/pinia/modules/userStore.js'
 import { useAppStore } from '@/pinia/modules/appStore.js'
 import { computed } from 'vue'
 
-const { stories, posts, handleFollow } = useHome()
+const { stories, posts, handleFollow, handleToggleLike, handleToggleSave } = useHome()
 const userStore = useUserStore()
 const appStore = useAppStore()
 
@@ -400,6 +412,17 @@ const myAvatar = computed(() => {
   gap: 8rpx;
 }
 
+.action-icon-wrap,
+.save-action-inner {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center;
+}
+
 .action-icon-img {
   width: 44rpx;
   height: 44rpx;
@@ -413,6 +436,17 @@ const myAvatar = computed(() => {
 .action-count {
   font-size: 26rpx;
   color: var(--text-color);
+  transition: color 0.2s ease;
+}
+
+.actions-right {
+  min-width: 68rpx;
+  min-height: 68rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 /* ===== Content ===== */
@@ -455,4 +489,5 @@ const myAvatar = computed(() => {
   font-size: 22rpx;
   color: #00376b;
 }
+
 </style>

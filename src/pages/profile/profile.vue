@@ -354,13 +354,13 @@ const goFollowList = (tab) => {
 }
 
 .btn-primary {
-  background: var(--theme-secondary);
+  background: var(--btn-bg);
   color: var(--text-color);
 }
 
 .btn-icon {
   flex: 0 0 64rpx;
-  background: var(--theme-secondary);
+  background: var(--btn-bg);
 }
 
 .btn-icon image {

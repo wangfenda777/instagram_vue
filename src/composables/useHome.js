@@ -1,11 +1,13 @@
 import { ref, onMounted } from 'vue'
 import { getStoryFeed } from '@/api/story.js'
-import { getPostFeed } from '@/api/post.js'
+import { getPostFeed, likePost, unlikePost, savePost, unsavePost } from '@/api/post.js'
 import { followUser as followUserApi } from '@/api/user.js'
 import { useAppStore } from '@/pinia/modules/appStore.js'
+import { useActionFeedback } from '@/composables/useActionFeedback.js'
 
 export function useHome() {
   const appStore = useAppStore()
+  const { triggerFeedback } = useActionFeedback()
   const stories = ref([])
   const posts = ref([])
   const page = ref(1)
@@ -35,23 +37,36 @@ export function useHome() {
     loading.value = true
     try {
       const data = await getPostFeed(page.value)
-      const list = data.list.map(item => ({
-        id: item.postId,
-        userId: item.userId,
-        username: item.username,
-        location: item.location,
-        avatar: appStore.baseUrl + item.avatar,
-        isVerified: item.isVerified,
-        showFollow: !item.isFollowing,
-        images: item.mediaList.map(m => appStore.baseUrl + m.url),
-        likes: formatCount(item.likesCount),
-        comments: formatCount(item.commentsCount),
-        shares: formatCount(item.sharesCount),
-        content: item.content,
-        isLiked: item.isLiked,
-        isSaved: item.isSaved,
-        date: formatDate(item.createdAt)
-      }))
+      const list = data.list.map(item => {
+        const likesCount = Number(item.likesCount || 0)
+        const commentsCount = Number(item.commentsCount || 0)
+        const sharesCount = Number(item.sharesCount || 0)
+
+        return {
+          id: item.postId,
+          userId: item.userId,
+          username: item.username,
+          location: item.location,
+          avatar: appStore.baseUrl + item.avatar,
+          isVerified: item.isVerified,
+          showFollow: !item.isFollowing,
+          images: item.mediaList.map(m => appStore.baseUrl + m.url),
+          likesCount,
+          commentsCount,
+          sharesCount,
+          likes: formatCount(likesCount),
+          comments: formatCount(commentsCount),
+          shares: formatCount(sharesCount),
+          content: item.content || '',
+          isLiked: Boolean(item.isLiked),
+          isSaved: Boolean(item.isSaved),
+          likePending: false,
+          savePending: false,
+          likeAnimating: false,
+          saveAnimating: false,
+          date: formatDate(item.createdAt)
+        }
+      })
       posts.value.push(...list)
       hasMore.value = data.hasMore
       page.value++
@@ -74,12 +89,66 @@ export function useHome() {
     }
   }
 
+  const handleToggleLike = async (postId) => {
+    const post = posts.value.find(item => item.id === postId)
+    if (!post || post.likePending) return
+
+    post.likePending = true
+    try {
+      if (post.isLiked) {
+        await unlikePost({ postId })
+        post.isLiked = false
+        post.likesCount = Math.max(0, post.likesCount - 1)
+      } else {
+        await likePost({ postId })
+        post.isLiked = true
+        post.likesCount += 1
+        triggerFeedback(post, 'likeAnimating')
+      }
+      post.likes = formatCount(post.likesCount)
+    } catch (e) {
+      console.error('点赞操作失败', e)
+    } finally {
+      post.likePending = false
+    }
+  }
+
+  const handleToggleSave = async (postId) => {
+    const post = posts.value.find(item => item.id === postId)
+    if (!post || post.savePending) return
+
+    post.savePending = true
+    try {
+      if (post.isSaved) {
+        await unsavePost({ postId })
+        post.isSaved = false
+      } else {
+        await savePost({ postId })
+        post.isSaved = true
+        triggerFeedback(post, 'saveAnimating')
+      }
+    } catch (e) {
+      console.error('收藏操作失败', e)
+    } finally {
+      post.savePending = false
+    }
+  }
+
   onMounted(() => {
     fetchStories()
     fetchPosts()
   })
 
-  return { stories, posts, hasMore, loading, fetchPosts, handleFollow }
+  return {
+    stories,
+    posts,
+    hasMore,
+    loading,
+    fetchPosts,
+    handleFollow,
+    handleToggleLike,
+    handleToggleSave
+  }
 }
 
 function formatCount(num) {
