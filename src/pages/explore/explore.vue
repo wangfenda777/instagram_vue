@@ -72,6 +72,7 @@
               v-for="user in userResults"
               :key="user.id || user.username"
               class="result-row user-row"
+              @click="goUserDetail(user)"
             >
               <image class="user-avatar" :src="user.avatar" mode="aspectFill" />
               <view class="result-info user-info">
@@ -178,7 +179,8 @@ const {
   enterSearchMode,
   cancelSearch,
   handleSearchInput,
-  handleSearch
+  handleSearch,
+  goUserDetail
 } = useExplore()
 </script>
 

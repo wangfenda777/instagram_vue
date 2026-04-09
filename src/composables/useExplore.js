@@ -1,11 +1,13 @@
 import { ref, computed } from 'vue'
 import { searchTag, searchUser } from '@/api/search.js'
 import { useAppStore } from '@/pinia/modules/appStore.js'
+import { useUserStore } from '@/pinia/modules/userStore.js'
 
 const SEARCH_DEBOUNCE_DELAY = 350
 
 export function useExplore() {
   const appStore = useAppStore()
+  const userStore = useUserStore()
   const exploreList = ref([
     { id: 1, type: 'image', images: ['/static/images/home/1.jpg'], width: 1, height: 1 },
     { id: 2, type: 'video', video: '/static/video/1.mp4', cover: '/static/images/home/2.jpg', width: 1, height: 2 },
@@ -158,6 +160,22 @@ export function useExplore() {
     scheduleSearch()
   }
 
+  const goUserDetail = (user) => {
+    const targetUserId = String(user?.id || user?.userId || '')
+    const currentUserId = String(userStore.userInfo?.userId || '')
+
+    if (!targetUserId) return
+
+    if (targetUserId === currentUserId) {
+      uni.switchTab({ url: '/pages/profile/profile' })
+      return
+    }
+
+    uni.navigateTo({
+      url: `/pages/user-detail/user-detail?userId=${encodeURIComponent(targetUserId)}`
+    })
+  }
+
   // 瀑布流分列
   const column1 = computed(() => {
     const result = []
@@ -216,6 +234,7 @@ export function useExplore() {
     enterSearchMode,
     cancelSearch,
     handleSearchInput,
-    handleSearch
+    handleSearch,
+    goUserDetail
   }
 }

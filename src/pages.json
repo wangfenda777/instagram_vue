@@ -51,7 +51,13 @@
     {
       "path": "pages/profile/follow-list",
       "style": {
-        "navigationBarTitleText": "粉丝与关注"
+        "navigationBarTitleText": "粉丝关注"
+      }
+    },
+    {
+      "path": "pages/user-detail/user-detail",
+      "style": {
+        "navigationBarTitleText": "用户详情"
       }
     }
   ],

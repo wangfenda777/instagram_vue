@@ -13,42 +13,17 @@
           <image class="icon" src="/static/icons/elip.svg" mode="aspectFit" />
         </view>
       </view>
-
-      <!-- 用户信息区域 -->
-      <view class="user-info">
-        <view class="avatar-section">
-          <view class="avatar-wrapper">
-            <image class="avatar" :src="userInfo.avatar" mode="aspectFill" />
-            <view class="add-story">
-              <text class="add-icon">+</text>
-            </view>
-          </view>
-        </view>
-
-   
-
-        <view class="stats-section">
-          <view class="user-name">
-            <text>{{ userInfo.displayName }}</text>
-          </view>
-          <view class="stats">
-            <view class="stat-item">
-              <text class="stat-number">{{ userInfo.posts }}</text>
-              <text class="stat-label">帖子</text>
-            </view>
-            <view class="stat-item" @click="goFollowList(0)">
-              <text class="stat-number">{{ userInfo.followers }}</text>
-              <text class="stat-label">粉丝</text>
-            </view>
-            <view class="stat-item" @click="goFollowList(1)">
-              <text class="stat-number">{{ userInfo.following }}</text>
-              <text class="stat-label">已关注</text>
-            </view>
-          </view>
-        </view>
-      </view>
-
-
+      <!-- 头像和用户数据 -->
+      <ProfileSummary
+        :avatar="userInfo.avatar"
+        :display-name="userInfo.displayName"
+        :posts="userInfo.posts"
+        :followers="userInfo.followers"
+        :following="userInfo.following"
+        :show-avatar-badge="true"
+        avatar-badge-text="+"
+        @stat-click="handleStatClick"
+      />
 
       <view class="action-buttons">
         <view class="btn btn-primary" @click="goEditProfile">编辑主页</view>
@@ -80,56 +55,27 @@
         </scroll-view>
       </view>
 
-      <!-- Tab切换 -->
-      <view class="tabs">
-        <view
-          class="tab-item"
-          :class="{ active: activeTab === 0 }"
-          @click="switchTab(0)"
-        >
-          <image src="/static/icons/book.svg" mode="aspectFit" />
-        </view>
-        <view
-          class="tab-item"
-          :class="{ active: activeTab === 1 }"
-          @click="switchTab(1)"
-        >
-          <image src="/static/icons/video.svg" mode="aspectFit" />
-        </view>
-        <view
-          class="tab-item"
-          :class="{ active: activeTab === 2 }"
-          @click="switchTab(2)"
-        >
-          <image src="/static/icons/star.svg" mode="aspectFit" />
-        </view>
-      </view>
+      <ProfileTabs v-model="activeTab" :tabs="profileTabs" />
 
-      <!-- Tab内容 -->
-      <view class="tab-content" v-if="activeTab === 0">
-        <!-- 图片网格 -->
-        <view class="posts-grid">
-          <view class="post-item" v-for="post in userPosts" :key="post.id">
-            <image :src="post.image" mode="aspectFill" />
-          </view>
-        </view>
-      </view>
+      <ProfileGrid
+        v-if="activeTab === 0"
+        :items="normalizedUserPosts"
+        empty-text="暂无帖子"
+        :show-multi-icon="true"
+      />
 
-      <view class="tab-content" v-if="activeTab === 1">
-        <view class="posts-grid">
-          <view class="post-item" v-for="post in userVideos" :key="post.id">
-            <image :src="post.cover" mode="aspectFill" />
-          </view>
-        </view>
-      </view>
+      <ProfileGrid
+        v-else-if="activeTab === 1"
+        :items="normalizedUserVideos"
+        empty-text="暂无 Reels"
+        :show-video-icon="true"
+      />
 
-      <view class="tab-content" v-if="activeTab === 2">
-        <view class="posts-grid">
-          <view class="post-item" v-for="post in userTagged" :key="post.id">
-            <image :src="post.image" mode="aspectFill" />
-          </view>
-        </view>
-      </view>
+      <ProfileGrid
+        v-else
+        :items="normalizedUserTagged"
+        empty-text="暂无内容"
+      />
 
       <!-- 完善主页 -->
       <view class="profile-tasks">
@@ -137,11 +83,9 @@
           <view class="tasks-title">完善主页</view>
           <view class="tasks-progress">{{ profileTasks.filter(t => t.completed).length }}/{{ profileTasks.length }}已完成</view>
         </view>
-        <!-- 进度条 -->
         <view class="progress-bar-wrap">
           <view class="progress-bar-fill" :style="{ width: (profileTasks.filter(t => t.completed).length / profileTasks.length * 100) + '%' }"></view>
         </view>
-        <!-- 横向滚动卡片 -->
         <scroll-view class="tasks-scroll" scroll-x>
           <view class="tasks-list">
             <view
@@ -170,8 +114,18 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import Layout from '@/components/common/Layout.vue'
+import ProfileSummary from '@/components/profile/ProfileSummary.vue'
+import ProfileTabs from '@/components/profile/ProfileTabs.vue'
+import ProfileGrid from '@/components/profile/ProfileGrid.vue'
 import { useProfile } from '@/composables/useProfile'
+
+const profileTabs = [
+  { key: 0, icon: '/static/icons/book.svg' },
+  { key: 1, icon: '/static/icons/video.svg' },
+  { key: 2, icon: '/static/icons/star.svg' }
+]
 
 const {
   userInfo,
@@ -185,6 +139,25 @@ const {
   removeDiscoverUser,
   switchTab
 } = useProfile()
+
+const normalizedUserPosts = computed(() => userPosts.value.map(post => ({
+  id: post.id,
+  cover: post.image,
+  mediaType: 'image',
+  mediaCount: Number(post.mediaCount || 0)
+})))
+
+const normalizedUserVideos = computed(() => userVideos.value.map(post => ({
+  id: post.id,
+  cover: post.cover,
+  mediaType: 'video'
+})))
+
+const normalizedUserTagged = computed(() => userTagged.value.map(post => ({
+  id: post.id,
+  cover: post.image,
+  mediaType: 'image'
+})))
 
 const goEditProfile = () => {
   uni.navigateTo({ url: '/pages/profile/edit-profile' })
@@ -203,6 +176,17 @@ const goFollowList = (tab) => {
   uni.navigateTo({
     url: `/pages/profile/follow-list?${query}`
   })
+}
+
+const handleStatClick = (type) => {
+  if (type === 'followers') {
+    goFollowList(0)
+    return
+  }
+
+  if (type === 'following') {
+    goFollowList(1)
+  }
 }
 </script>
 
@@ -257,82 +241,6 @@ const goFollowList = (tab) => {
 .header-right .icon {
   width: 48rpx;
   height: 48rpx;
-}
-
-.user-info {
-  display: flex;
-  padding: 32rpx;
-  gap: 40rpx;
-}
-
-.avatar-wrapper {
-  position: relative;
-  width: 180rpx;
-  height: 180rpx;
-}
-
-.avatar {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-}
-
-.add-story {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 48rpx;
-  height: 48rpx;
-  background: var(--theme-link);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 4rpx solid var(--page-bg);
-}
-
-.add-icon {
-  color: #fff;
-  font-size: 32rpx;
-  font-weight: 300;
-}
-
-.stats-section {
-  padding-top: 20rpx;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  justify-content: left;
-  gap: 16rpx;
-}
-
-.stats {
-  width: 100%s;
-  display: flex;
-  gap: 32rpx;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: left;
-}
-
-.stat-number {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: var(--text-color);
-}
-
-.stat-label {
-  font-size: 18rpx;
-  color: var(--text-color);
-}
-
-.user-name {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: var(--text-color);
 }
 
 .action-buttons {
@@ -458,61 +366,6 @@ const goFollowList = (tab) => {
   font-weight: 600;
   color: #fff;
   margin-top: 28rpx;
-}
-
-.tabs {
-  display: flex;
-  border-bottom: 1rpx solid var(--theme-border);
-}
-
-.tab-item {
-  flex: 1;
-  height: 100rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.tab-item image {
-  width: 48rpx;
-  height: 48rpx;
-  opacity: 0.4;
-}
-
-.tab-item.active image {
-  opacity: 1;
-}
-
-.tab-item.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2rpx;
-  background: var(--text-color);
-}
-
-.tab-content {
-  padding: 4rpx 0;
-}
-
-.posts-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4rpx;
-}
-
-.post-item {
-  aspect-ratio: 1;
-  overflow: hidden;
-}
-
-.post-item image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .profile-tasks {
