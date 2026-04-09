@@ -32,13 +32,48 @@
 
     <!-- 文案输入 -->
     <view class="input-section">
-      <textarea
-        class="textarea"
-        v-model="content"
-        placeholder="写一段文案..."
-        maxlength="2000"
-        :auto-height="true"
-      />
+      <view class="caption-editor" :style="{ minHeight: `${textareaHeight}rpx` }">
+        <view class="caption-highlight" :style="{ minHeight: `${textareaHeight}rpx` }">
+          <text
+            v-for="(segment, index) in formattedSegments"
+            :key="`${segment.type}-${index}`"
+            :class="segment.type === 'tag' ? 'segment-tag' : 'segment-text'"
+          >{{ segment.type === 'text' && !segment.text ? ' ' : segment.text }}</text>
+        </view>
+        <textarea
+          class="textarea"
+          :value="content"
+          :cursor="caretPosition"
+          placeholder="写一段文案..."
+          maxlength="2000"
+          :auto-height="true"
+          @input="handleContentInput"
+          @blur="handleContentBlur"
+        />
+      </view>
+
+      <view v-if="shouldShowSuggestions" class="tag-suggestion-panel">
+        <view v-if="isSearchingTags" class="tag-suggestion-status">
+          <text>标签搜索中...</text>
+        </view>
+        <view v-else-if="tagSearchError" class="tag-suggestion-status error-text">
+          <text>{{ tagSearchError }}</text>
+        </view>
+        <view v-else>
+          <view
+            v-for="tag in tagSuggestions"
+            :key="tag.id || tag.name"
+            class="tag-suggestion-item"
+            @mousedown.prevent="applyTagSuggestion(tag)"
+            @click="applyTagSuggestion(tag)"
+          >
+            <view class="tag-suggestion-info">
+              <text class="tag-suggestion-name">{{ tag.name }}</text>
+              <text v-if="tag.postCount" class="tag-suggestion-count">{{ tag.postCount }} 条内容</text>
+            </view>
+          </view>
+        </view>
+      </view>
     </view>
 
     <!-- 位置输入 -->
@@ -63,6 +98,7 @@
 import { ref, computed } from 'vue'
 import { uploadImage } from '@/api/upload.js'
 import { createPost } from '@/api/post.js'
+import { usePublishTagAutocomplete } from '@/composables/usePublishTagAutocomplete.js'
 
 const imageList = ref([])
 const content = ref('')
@@ -70,9 +106,28 @@ const location = ref('')
 const uploading = ref(false)
 const uploadProgress = ref('')
 
+const {
+  textareaHeight,
+  caretPosition,
+  formattedSegments,
+  tagSuggestions,
+  isSearchingTags,
+  tagSearchError,
+  shouldShowSuggestions,
+  handleContentInput,
+  applyTagSuggestion,
+  hideSuggestions
+} = usePublishTagAutocomplete(content)
+
 const canPublish = computed(() => {
   return imageList.value.length > 0 && !uploading.value
 })
+
+const handleContentBlur = () => {
+  setTimeout(() => {
+    hideSuggestions()
+  }, 200)
+}
 
 // 选择图片
 const chooseImage = () => {
@@ -122,18 +177,14 @@ const handlePublish = async () => {
   uploadProgress.value = '0%'
 
   try {
-    // 依次上传所有图片
     const mediaUrls = []
     for (let i = 0; i < imageList.value.length; i++) {
       uploadProgress.value = `${i + 1}/${imageList.value.length}`
-
-      // H5 环境：从 input file 获取 File 对象
       const file = await getFileFromPath(imageList.value[i].preview)
       const result = await uploadImage(file)
       mediaUrls.push(result.url)
     }
 
-    // 发布帖子
     uploadProgress.value = '发布中...'
     await createPost({
       content: content.value,
@@ -153,10 +204,8 @@ const handlePublish = async () => {
   }
 }
 
-// H5 环境：将临时路径转为 File 对象
 const getFileFromPath = (path) => {
   return new Promise((resolve, reject) => {
-    // 如果是 blob URL，直接 fetch
     if (path.startsWith('blob:')) {
       fetch(path)
         .then(res => res.blob())
@@ -166,7 +215,6 @@ const getFileFromPath = (path) => {
         })
         .catch(reject)
     } else {
-      // 如果是 base64 或其他，需要转换
       reject(new Error('Unsupported path format'))
     }
   })
@@ -295,11 +343,105 @@ const getFileFromPath = (path) => {
   border-top: 2rpx solid #f1f1f1;
 }
 
+.caption-editor {
+  position: relative;
+}
+
+.caption-highlight,
 .textarea {
   width: 100%;
   min-height: 200rpx;
+  padding: 0;
   font-size: 28rpx;
   line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.caption-highlight {
+  pointer-events: none;
+  color: transparent;
+}
+
+.segment-text {
+  color: #111111;
+}
+
+.segment-tag {
+  color: #0095f6;
+  padding-right: 16rpx;
+}
+
+.textarea {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: transparent;
+  color: rgba(0, 0, 0, 0.02);
+  caret-color: #111111;
+  z-index: 2;
+}
+
+.tag-suggestion-panel {
+  margin-top: 24rpx;
+  border: 2rpx solid #f1f1f1;
+  border-radius: 20rpx;
+  background: #fff;
+  overflow: hidden;
+}
+
+.tag-suggestion-status {
+  padding: 24rpx;
+  font-size: 26rpx;
+  color: #8e8e93;
+}
+
+.error-text {
+  color: #ff3b30;
+}
+
+.tag-suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx;
+  border-bottom: 1rpx solid #f2f2f7;
+}
+
+.tag-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.tag-suggestion-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  border: 1rpx solid #dcdce0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  color: #111111;
+  flex-shrink: 0;
+}
+
+.tag-suggestion-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.tag-suggestion-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #111111;
+}
+
+.tag-suggestion-count {
+  font-size: 24rpx;
+  color: #8e8e93;
 }
 
 .location-section {

@@ -90,14 +90,20 @@
       <!-- 文字内容 -->
       <view class="post-content">
         <text class="content-username">{{ post.username }}</text>
-        <text class="content-text"> {{ post.content }}</text>
+        <text class="content-text">
+          <text
+            v-for="(segment, index) in formatContentSegments(post.content)"
+            :key="`${post.id}-${index}`"
+            :class="segment.type === 'tag' ? 'content-tag' : ''"
+          >{{ segment.text }}</text>
+        </text>
         <text class="content-expand" v-if="post.content.length > 30"> 展开</text>
       </view>
 
       <!-- 日期 -->
       <view class="post-date">
         <text class="date-text">{{ post.date }}</text>
-        <text class="translate-text"> · 查看翻译</text>
+        <!-- <text class="translate-text"> · 查看翻译</text> -->
       </view>
     </view>
     </view>
@@ -115,6 +121,33 @@ import { computed } from 'vue'
 const { stories, posts, handleFollow } = useHome()
 const userStore = useUserStore()
 const appStore = useAppStore()
+
+const formatContentSegments = (content = '') => {
+  const text = ` ${content || ''}`
+  const regex = /#[^\s#]+/g
+  const segments = []
+  let lastIndex = 0
+  let match = regex.exec(text)
+
+  while (match) {
+    const start = match.index
+    const end = start + match[0].length
+
+    if (start > lastIndex) {
+      segments.push({ type: 'text', text: text.slice(lastIndex, start) })
+    }
+
+    segments.push({ type: 'tag', text: match[0] })
+    lastIndex = end
+    match = regex.exec(text)
+  }
+
+  if (lastIndex < text.length) {
+    segments.push({ type: 'text', text: text.slice(lastIndex) })
+  }
+
+  return segments
+}
 
 const myAvatar = computed(() => {
   if (userStore.userInfo?.avatar) {
@@ -321,13 +354,17 @@ const myAvatar = computed(() => {
 }
 
 .follow-btn {
-  border: 1rpx solid var(--theme-border);
-  border-radius: 12rpx;
-  padding: 10rpx 28rpx;
+  /* border: 1rpx solid var(--theme-border); */
+  border-radius: 14rpx;
+  padding: 10rpx 18rpx;
+  background: var(--btn-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .follow-text {
-  font-size: 24rpx;
+  font-size: 20rpx;
   font-weight: 600;
   color: var(--text-color);
 }
@@ -387,11 +424,16 @@ const myAvatar = computed(() => {
   font-size: 26rpx;
   font-weight: 600;
   color: var(--text-color);
+  margin-right: 16rpx;
 }
 
 .content-text {
   font-size: 26rpx;
   color: var(--text-color);
+}
+
+.content-tag {
+  color: #00376b;
 }
 
 .content-expand {
