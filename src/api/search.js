@@ -19,7 +19,7 @@ export const searchTag = (keyword, page = 1, pageSize = 20) => {
 }
 
 // 搜索帖子/标签
-export const searchPost = (keyword, type = 'all', page = 1, pageSize = 24) => {
+export const searchPost = (keyword, type = 'all', page = 1, pageSize = 20) => {
   return request({
     url: '/api/search/post',
     method: 'GET',

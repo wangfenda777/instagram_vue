@@ -37,6 +37,7 @@
           <text>暂无搜索结果</text>
         </view>
 
+        <!-- 搜索后的标签列表 -->
         <view v-else class="search-result-list">
           <view v-if="tagResults.length" class="result-section">
             <text class="section-title">标签</text>
@@ -44,6 +45,7 @@
               v-for="tag in tagResults"
               :key="tag.id || tag.name"
               class="result-row tag-row"
+              @click="goSearchOverview(tag)"
             >
               <view class="tag-icon-wrap">
                 <image
@@ -66,6 +68,7 @@
             </view>
           </view>
 
+          <!-- 搜索后的用户列表 -->
           <view v-if="userResults.length" class="result-section">
             <text class="section-title">用户</text>
             <view
@@ -180,6 +183,7 @@ const {
   cancelSearch,
   handleSearchInput,
   handleSearch,
+  goSearchOverview,
   goUserDetail
 } = useExplore()
 </script>

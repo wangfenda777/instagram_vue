@@ -59,6 +59,12 @@
       "style": {
         "navigationBarTitleText": "用户详情"
       }
+    },
+    {
+      "path": "pages/search-overview/search-overview",
+      "style": {
+        "navigationBarTitleText": "搜索总览"
+      }
     }
   ],
   "globalStyle": {

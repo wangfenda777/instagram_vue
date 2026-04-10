@@ -160,6 +160,15 @@ export function useExplore() {
     scheduleSearch()
   }
 
+  const goSearchOverview = (tag) => {
+    const keyword = String(tag?.name || tag?.tagName || '').trim()
+    if (!keyword) return
+
+    uni.navigateTo({
+      url: `/pages/search-overview/search-overview?keyword=${encodeURIComponent(keyword)}&tab=recommend`
+    })
+  }
+
   const goUserDetail = (user) => {
     const targetUserId = String(user?.id || user?.userId || '')
     const currentUserId = String(userStore.userInfo?.userId || '')
@@ -235,6 +244,7 @@ export function useExplore() {
     cancelSearch,
     handleSearchInput,
     handleSearch,
+    goSearchOverview,
     goUserDetail
   }
 }

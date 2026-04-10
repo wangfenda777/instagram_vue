@@ -123,6 +123,7 @@
 </template>
 
 <script setup>
+import { onReachBottom } from '@dcloudio/uni-app'
 import Layout from '@/components/common/Layout.vue'
 import ImageSwiper from '@/components/common/ImageSwiper.vue'
 import { useHome } from '@/composables/useHome'
@@ -130,7 +131,7 @@ import { useUserStore } from '@/pinia/modules/userStore.js'
 import { useAppStore } from '@/pinia/modules/appStore.js'
 import { computed } from 'vue'
 
-const { stories, posts, handleFollow, handleToggleLike, handleToggleSave } = useHome()
+const { stories, posts, fetchPosts, handleFollow, handleToggleLike, handleToggleSave } = useHome()
 const userStore = useUserStore()
 const appStore = useAppStore()
 
@@ -166,6 +167,10 @@ const myAvatar = computed(() => {
     return userStore.userInfo.avatar
   }
   return '/static/images/avatar/1.jpg'
+})
+
+onReachBottom(() => {
+  fetchPosts()
 })
 </script>
 

@@ -1,11 +1,11 @@
 import { request } from './index.js'
 
 // 获取首页帖子 Feed 流
-export const getPostFeed = (page = 1, pageSize = 10) => {
+export const getPostFeed = (lastId = 0, pageSize = 6) => {
   return request({
     url: '/api/post/feed',
     method: 'GET',
-    data: { page, pageSize }
+    data: { lastId, pageSize }
   })
 }
 

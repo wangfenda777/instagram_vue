@@ -5,12 +5,14 @@ import { followUser as followUserApi } from '@/api/user.js'
 import { useAppStore } from '@/pinia/modules/appStore.js'
 import { useActionFeedback } from '@/composables/useActionFeedback.js'
 
+const FEED_PAGE_SIZE = 6
+
 export function useHome() {
   const appStore = useAppStore()
   const { triggerFeedback } = useActionFeedback()
   const stories = ref([])
   const posts = ref([])
-  const page = ref(1)
+  const lastId = ref(0)
   const hasMore = ref(true)
   const loading = ref(false)
 
@@ -36,8 +38,9 @@ export function useHome() {
     if (loading.value || !hasMore.value) return
     loading.value = true
     try {
-      const data = await getPostFeed(page.value)
-      const list = data.list.map(item => {
+      const data = await getPostFeed(lastId.value, FEED_PAGE_SIZE)
+      const rawList = getList(data)
+      const list = rawList.map(item => {
         const likesCount = Number(item.likesCount || 0)
         const commentsCount = Number(item.commentsCount || 0)
         const sharesCount = Number(item.sharesCount || 0)
@@ -67,9 +70,21 @@ export function useHome() {
           date: formatDate(item.createdAt)
         }
       })
+
       posts.value.push(...list)
-      hasMore.value = data.hasMore
-      page.value++
+
+      hasMore.value = Boolean(data?.hasMore)
+
+      if (!rawList.length || !hasMore.value) {
+        return
+      }
+
+      if (data?.lastId === null || data?.lastId === undefined || String(data.lastId) === String(lastId.value)) {
+        hasMore.value = false
+        return
+      }
+
+      lastId.value = data.lastId
     } catch (e) {
       console.error('获取帖子失败', e)
     } finally {
@@ -149,6 +164,12 @@ export function useHome() {
     handleToggleLike,
     handleToggleSave
   }
+}
+
+function getList(payload) {
+  if (Array.isArray(payload)) return payload
+  if (Array.isArray(payload?.list)) return payload.list
+  return []
 }
 
 function formatCount(num) {
