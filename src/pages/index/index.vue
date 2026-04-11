@@ -44,7 +44,7 @@
       <!-- 帖子头部 -->
       <view class="post-header">
         <view class="post-user">
-          <image class="post-avatar" :src="post.avatar" mode="aspectFill" />
+          <image class="post-avatar" :src="post.avatar" mode="aspectFill" @click="goUserDetail(post.userId)" />
           <view class="post-user-info">
             <view class="post-name-wrap">
               <text class="post-username">{{ post.username }}</text>
@@ -139,7 +139,7 @@ import { useUserStore } from '@/pinia/modules/userStore.js'
 import { useAppStore } from '@/pinia/modules/appStore.js'
 import { computed } from 'vue'
 
-const { stories, posts, hasMore, loading, fetchPosts, handleFollow, handleToggleLike, handleToggleSave } = useHome()
+const { stories, posts, hasMore, loading, fetchPosts, handleFollow, handleToggleLike, handleToggleSave, goUserDetail } = useHome()
 const userStore = useUserStore()
 const appStore = useAppStore()
 

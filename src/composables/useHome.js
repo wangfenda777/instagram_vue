@@ -3,12 +3,14 @@ import { getStoryFeed } from '@/api/story.js'
 import { getPostFeed, likePost, unlikePost, savePost, unsavePost } from '@/api/post.js'
 import { followUser as followUserApi } from '@/api/user.js'
 import { useAppStore } from '@/pinia/modules/appStore.js'
+import { useUserStore } from '@/pinia/modules/userStore.js'
 import { useActionFeedback } from '@/composables/useActionFeedback.js'
 
 const FEED_PAGE_SIZE = 6
 
 export function useHome() {
   const appStore = useAppStore()
+  const userStore = useUserStore()
   const { triggerFeedback } = useActionFeedback()
   const stories = ref([])
   const posts = ref([])
@@ -149,6 +151,21 @@ export function useHome() {
     }
   }
 
+  const goUserDetail = (userId) => {
+    const targetUserId = String(userId || '')
+    const currentUserId = String(userStore.userInfo?.userId || '')
+    if (!targetUserId) return
+
+    if (targetUserId === currentUserId) {
+      uni.switchTab({ url: '/pages/profile/profile' })
+      return
+    }
+
+    uni.navigateTo({
+      url: `/pages/user-detail/user-detail?userId=${encodeURIComponent(targetUserId)}`
+    })
+  }
+
   onMounted(() => {
     fetchStories()
     fetchPosts()
@@ -162,7 +179,8 @@ export function useHome() {
     fetchPosts,
     handleFollow,
     handleToggleLike,
-    handleToggleSave
+    handleToggleSave,
+    goUserDetail
   }
 }
 
