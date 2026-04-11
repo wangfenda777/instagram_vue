@@ -104,12 +104,12 @@
         <text class="content-username">{{ post.username }}</text>
         <text class="content-text">
           <text
-            v-for="(segment, index) in formatContentSegments(post.content)"
+            v-for="(segment, index) in getDisplaySegments(post)"
             :key="`${post.id}-${index}`"
             :class="segment.type === 'tag' ? 'content-tag' : ''"
           >{{ segment.text }}</text>
+          <text v-if="!post.expanded && isContentLong(post.content)" class="content-expand" @click.stop="post.expanded = true"> ...展开</text>
         </text>
-        <text class="content-expand" v-if="post.content.length > 30"> 展开</text>
       </view>
 
       <!-- 日期 -->
@@ -142,6 +142,18 @@ import { computed } from 'vue'
 const { stories, posts, hasMore, loading, fetchPosts, handleFollow, handleToggleLike, handleToggleSave, goUserDetail } = useHome()
 const userStore = useUserStore()
 const appStore = useAppStore()
+
+const CONTENT_MAX_LENGTH = 60
+
+const isContentLong = (content = '') => content.length > CONTENT_MAX_LENGTH
+
+const getDisplaySegments = (post) => {
+  const content = post.content || ''
+  if (post.expanded || !isContentLong(content)) {
+    return formatContentSegments(content)
+  }
+  return formatContentSegments(content.slice(0, CONTENT_MAX_LENGTH))
+}
 
 const formatContentSegments = (content = '') => {
   const text = ` ${content || ''}`
@@ -486,6 +498,7 @@ onReachBottom(() => {
 .content-expand {
   font-size: 26rpx;
   color: var(--theme-secondary);
+  white-space: nowrap;
 }
 
 /* ===== Date ===== */

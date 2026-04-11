@@ -69,6 +69,7 @@ export function useHome() {
           savePending: false,
           likeAnimating: false,
           saveAnimating: false,
+          expanded: false,
           date: formatDate(item.createdAt)
         }
       })
