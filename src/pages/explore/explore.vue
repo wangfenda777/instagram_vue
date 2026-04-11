@@ -97,6 +97,7 @@
             v-for="item in column1"
             :key="item.id"
             :class="{ 'item-video-wrap': item.type === 'video' }"
+            @click="openPost(item.id)"
           >
             <view :class="item.type === 'video' ? 'item-video' : 'item-image'">
               <image class="media" :src="item.cover" mode="aspectFill" />
@@ -122,6 +123,7 @@
             v-for="item in column2"
             :key="item.id"
             :class="{ 'item-video-wrap': item.type === 'video' }"
+            @click="openPost(item.id)"
           >
             <view :class="item.type === 'video' ? 'item-video' : 'item-image'">
               <image class="media" :src="item.cover" mode="aspectFill" />
@@ -147,6 +149,7 @@
             v-for="item in column3"
             :key="item.id"
             :class="{ 'item-video-wrap': item.type === 'video' }"
+            @click="openPost(item.id)"
           >
             <view :class="item.type === 'video' ? 'item-video' : 'item-image'">
               <image class="media" :src="item.cover" mode="aspectFill" />
@@ -175,13 +178,31 @@
         <text class="explore-status-text">没有更多了</text>
       </view>
     </view>
+
+    <!-- 帖子详情弹窗 -->
+    <FullscreenPopup v-model:show="showPopup">
+      <view v-if="detailLoading" class="detail-loading">
+        <text>加载中...</text>
+      </view>
+      <PostCard
+        v-else-if="detailPost"
+        :post="detailPost"
+        @avatar-click="detailGoUserDetail"
+        @follow="detailHandleFollow"
+        @toggle-like="detailHandleToggleLike"
+        @toggle-save="detailHandleToggleSave"
+      />
+    </FullscreenPopup>
   </Layout>
 </template>
 
 <script setup>
 import { onReachBottom } from '@dcloudio/uni-app'
 import Layout from '@/components/common/Layout.vue'
+import FullscreenPopup from '@/components/common/FullscreenPopup.vue'
+import PostCard from '@/components/common/PostCard.vue'
 import { useExplore } from '@/composables/useExplore'
+import { usePostDetail } from '@/composables/usePostDetail'
 
 const {
   exploreList,
@@ -205,6 +226,18 @@ const {
   goSearchOverview,
   goUserDetail
 } = useExplore()
+
+const {
+  showPopup,
+  post: detailPost,
+  loading: detailLoading,
+  openPost,
+  closePost,
+  handleFollow: detailHandleFollow,
+  handleToggleLike: detailHandleToggleLike,
+  handleToggleSave: detailHandleToggleSave,
+  goUserDetail: detailGoUserDetail
+} = usePostDetail()
 
 onReachBottom(() => {
   if (!isSearchMode.value) {
@@ -448,6 +481,15 @@ onReachBottom(() => {
 
 .explore-status-text {
   font-size: 24rpx;
+  color: var(--theme-secondary);
+}
+
+.detail-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400rpx;
+  font-size: 28rpx;
   color: var(--theme-secondary);
 }
 </style>
