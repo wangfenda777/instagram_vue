@@ -98,18 +98,20 @@
             :key="item.id"
             :class="{ 'item-video-wrap': item.type === 'video' }"
           >
-            <view v-if="item.type === 'image'" class="item-image">
-              <image class="media" :src="item.images[0]" mode="aspectFill" />
+            <view :class="item.type === 'video' ? 'item-video' : 'item-image'">
+              <image class="media" :src="item.cover" mode="aspectFill" />
               <image
-                v-if="item.images.length > 1"
+                v-if="item.type === 'image' && item.mediaCount > 1"
                 class="multi-icon"
                 src="/static/icons/copy.svg"
                 mode="aspectFit"
               />
-            </view>
-            <view v-else class="item-video">
-              <image class="media" :src="item.cover" mode="aspectFill" />
-              <image class="play-icon" src="/static/icons/video.svg" mode="aspectFit" />
+              <image
+                v-if="item.type === 'video'"
+                class="play-icon"
+                src="/static/icons/video.svg"
+                mode="aspectFit"
+              />
             </view>
           </view>
         </view>
@@ -121,18 +123,20 @@
             :key="item.id"
             :class="{ 'item-video-wrap': item.type === 'video' }"
           >
-            <view v-if="item.type === 'image'" class="item-image">
-              <image class="media" :src="item.images[0]" mode="aspectFill" />
+            <view :class="item.type === 'video' ? 'item-video' : 'item-image'">
+              <image class="media" :src="item.cover" mode="aspectFill" />
               <image
-                v-if="item.images.length > 1"
+                v-if="item.type === 'image' && item.mediaCount > 1"
                 class="multi-icon"
                 src="/static/icons/copy.svg"
                 mode="aspectFit"
               />
-            </view>
-            <view v-else class="item-video">
-              <image class="media" :src="item.cover" mode="aspectFill" />
-              <image class="play-icon" src="/static/icons/video.svg" mode="aspectFit" />
+              <image
+                v-if="item.type === 'video'"
+                class="play-icon"
+                src="/static/icons/video.svg"
+                mode="aspectFit"
+              />
             </view>
           </view>
         </view>
@@ -144,34 +148,49 @@
             :key="item.id"
             :class="{ 'item-video-wrap': item.type === 'video' }"
           >
-            <view v-if="item.type === 'image'" class="item-image">
-              <image class="media" :src="item.images[0]" mode="aspectFill" />
+            <view :class="item.type === 'video' ? 'item-video' : 'item-image'">
+              <image class="media" :src="item.cover" mode="aspectFill" />
               <image
-                v-if="item.images.length > 1"
+                v-if="item.type === 'image' && item.mediaCount > 1"
                 class="multi-icon"
                 src="/static/icons/copy.svg"
                 mode="aspectFit"
               />
-            </view>
-            <view v-else class="item-video">
-              <image class="media" :src="item.cover" mode="aspectFill" />
-              <image class="play-icon" src="/static/icons/video.svg" mode="aspectFit" />
+              <image
+                v-if="item.type === 'video'"
+                class="play-icon"
+                src="/static/icons/video.svg"
+                mode="aspectFit"
+              />
             </view>
           </view>
         </view>
+      </view>
+
+      <!-- 底部状态提示 -->
+      <view v-if="!isSearchMode && exploreLoading" class="explore-status">
+        <text class="explore-status-text">加载中...</text>
+      </view>
+      <view v-else-if="!isSearchMode && !exploreHasMore && exploreList.length" class="explore-status">
+        <text class="explore-status-text">没有更多了</text>
       </view>
     </view>
   </Layout>
 </template>
 
 <script setup>
+import { onReachBottom } from '@dcloudio/uni-app'
 import Layout from '@/components/common/Layout.vue'
 import { useExplore } from '@/composables/useExplore'
 
 const {
+  exploreList,
+  exploreLoading,
+  exploreHasMore,
   column1,
   column2,
   column3,
+  fetchExplore,
   searchKeyword,
   isSearchMode,
   isSearching,
@@ -186,6 +205,12 @@ const {
   goSearchOverview,
   goUserDetail
 } = useExplore()
+
+onReachBottom(() => {
+  if (!isSearchMode.value) {
+    fetchExplore()
+  }
+})
 </script>
 
 <style scoped>
@@ -414,5 +439,15 @@ const {
   width: 40rpx;
   height: 40rpx;
   filter: drop-shadow(0 2rpx 4rpx rgba(0, 0, 0, 0.3));
+}
+
+.explore-status {
+  padding: 40rpx 0;
+  text-align: center;
+}
+
+.explore-status-text {
+  font-size: 24rpx;
+  color: var(--theme-secondary);
 }
 </style>

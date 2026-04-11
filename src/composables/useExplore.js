@@ -1,39 +1,48 @@
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { searchTag, searchUser } from '@/api/search.js'
+import { getExploreFeed } from '@/api/explore.js'
 import { useAppStore } from '@/pinia/modules/appStore.js'
 import { useUserStore } from '@/pinia/modules/userStore.js'
 
 const SEARCH_DEBOUNCE_DELAY = 350
+const EXPLORE_PAGE_SIZE = 24
 
 export function useExplore() {
   const appStore = useAppStore()
   const userStore = useUserStore()
-  const exploreList = ref([
-    { id: 1, type: 'image', images: ['/static/images/home/1.jpg'], width: 1, height: 1 },
-    { id: 2, type: 'video', video: '/static/video/1.mp4', cover: '/static/images/home/2.jpg', width: 1, height: 2 },
-    { id: 3, type: 'image', images: ['/static/images/home/3.jpg', '/static/images/home/4.jpg'], width: 1, height: 1 },
-    { id: 4, type: 'image', images: ['/static/images/home/5.jpg'], width: 1, height: 1 },
-    { id: 5, type: 'image', images: ['/static/images/home/6.jpg', '/static/images/home/7.jpg', '/static/images/home/8.jpg'], width: 1, height: 1 },
-    { id: 6, type: 'video', video: '/static/video/2.mp4', cover: '/static/images/home/9.jpg', width: 1, height: 2 },
-    { id: 7, type: 'image', images: ['/static/images/home/10.jpg'], width: 1, height: 1 },
-    { id: 8, type: 'image', images: ['/static/images/home/11.jpg', '/static/images/home/12.jpg'], width: 1, height: 1 },
-    { id: 9, type: 'video', video: '/static/video/3.mp4', cover: '/static/images/home/13.jpg', width: 1, height: 2 },
-    { id: 10, type: 'image', images: ['/static/images/home/1.jpg'], width: 1, height: 1 },
-    { id: 11, type: 'image', images: ['/static/images/home/2.jpg', '/static/images/home/3.jpg'], width: 1, height: 1 },
-    { id: 12, type: 'video', video: '/static/video/4.mp4', cover: '/static/images/home/4.jpg', width: 1, height: 2 },
-    { id: 13, type: 'image', images: ['/static/images/home/1.jpg'], width: 1, height: 1 },
-    { id: 14, type: 'video', video: '/static/video/1.mp4', cover: '/static/images/home/2.jpg', width: 1, height: 2 },
-    { id: 15, type: 'image', images: ['/static/images/home/3.jpg', '/static/images/home/4.jpg'], width: 1, height: 1 },
-    { id: 16, type: 'image', images: ['/static/images/home/5.jpg'], width: 1, height: 1 },
-    { id: 17, type: 'image', images: ['/static/images/home/6.jpg', '/static/images/home/7.jpg', '/static/images/home/8.jpg'], width: 1, height: 1 },
-    { id: 18, type: 'video', video: '/static/video/2.mp4', cover: '/static/images/home/9.jpg', width: 1, height: 2 },
-    { id: 19, type: 'image', images: ['/static/images/home/10.jpg'], width: 1, height: 1 },
-    { id: 20, type: 'image', images: ['/static/images/home/11.jpg', '/static/images/home/12.jpg'], width: 1, height: 1 },
-    { id: 21, type: 'video', video: '/static/video/3.mp4', cover: '/static/images/home/13.jpg', width: 1, height: 2 },
-    { id: 22, type: 'image', images: ['/static/images/home/1.jpg'], width: 1, height: 1 },
-    { id: 23, type: 'image', images: ['/static/images/home/2.jpg', '/static/images/home/3.jpg'], width: 1, height: 1 },
-    { id: 24, type: 'video', video: '/static/video/4.mp4', cover: '/static/images/home/4.jpg', width: 1, height: 2 }
-  ])
+  const exploreList = ref([])
+  const explorePage = ref(1)
+  const exploreHasMore = ref(true)
+  const exploreLoading = ref(false)
+
+  const normalizeAsset = (url) => {
+    if (!url) return ''
+    return url.startsWith('http') ? url : appStore.baseUrl + url
+  }
+
+  const normalizeExploreItem = (item = {}) => ({
+    id: item.postId || item.id || '',
+    type: item.mediaType || 'image',
+    cover: normalizeAsset(item.coverUrl || item.cover || ''),
+    mediaCount: Number(item.mediaCount || 0)
+  })
+
+  const fetchExplore = async () => {
+    if (exploreLoading.value || !exploreHasMore.value) return
+    exploreLoading.value = true
+    try {
+      const data = await getExploreFeed(explorePage.value, EXPLORE_PAGE_SIZE)
+      const rawList = getList(data)
+      const list = rawList.map(normalizeExploreItem)
+      exploreList.value.push(...list)
+      exploreHasMore.value = Boolean(data?.hasMore)
+      explorePage.value++
+    } catch (e) {
+      console.error('获取探索页失败', e)
+    } finally {
+      exploreLoading.value = false
+    }
+  }
 
   const searchKeyword = ref('')
   const isSearchMode = ref(false)
@@ -228,11 +237,18 @@ export function useExplore() {
     runSearch()
   }
 
+  onMounted(() => {
+    fetchExplore()
+  })
+
   return {
     exploreList,
+    exploreLoading,
+    exploreHasMore,
     column1,
     column2,
     column3,
+    fetchExplore,
     searchKeyword,
     isSearchMode,
     isSearching,

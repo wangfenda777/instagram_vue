@@ -118,6 +118,14 @@
         <!-- <text class="translate-text"> · 查看翻译</text> -->
       </view>
     </view>
+
+    <!-- 底部状态提示 -->
+    <view v-if="loading" class="feed-status">
+      <text class="feed-status-text">加载中...</text>
+    </view>
+    <view v-else-if="!hasMore && posts.length" class="feed-status">
+      <text class="feed-status-text">没有更多了</text>
+    </view>
     </view>
   </Layout>
 </template>
@@ -131,7 +139,7 @@ import { useUserStore } from '@/pinia/modules/userStore.js'
 import { useAppStore } from '@/pinia/modules/appStore.js'
 import { computed } from 'vue'
 
-const { stories, posts, fetchPosts, handleFollow, handleToggleLike, handleToggleSave } = useHome()
+const { stories, posts, hasMore, loading, fetchPosts, handleFollow, handleToggleLike, handleToggleSave } = useHome()
 const userStore = useUserStore()
 const appStore = useAppStore()
 
@@ -493,6 +501,16 @@ onReachBottom(() => {
 .translate-text {
   font-size: 22rpx;
   color: #00376b;
+}
+
+.feed-status {
+  padding: 40rpx 0;
+  text-align: center;
+}
+
+.feed-status-text {
+  font-size: 24rpx;
+  color: var(--theme-secondary);
 }
 
 </style>
