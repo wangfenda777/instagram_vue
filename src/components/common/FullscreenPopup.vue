@@ -11,7 +11,14 @@
         <view class="popup-drag-bar" />
         <view class="popup-header-right" />
       </view>
-      <scroll-view class="popup-body" scroll-y>
+      <scroll-view
+        class="popup-body"
+        scroll-y
+        :upper-threshold="80"
+        :lower-threshold="160"
+        @scrolltoupper="$emit('scroll-top')"
+        @scrolltolower="$emit('scroll-bottom')"
+      >
         <slot />
       </scroll-view>
     </view>
@@ -25,7 +32,7 @@ const props = defineProps({
   show: { type: Boolean, default: false }
 })
 
-const emit = defineEmits(['update:show'])
+const emit = defineEmits(['update:show', 'scroll-top', 'scroll-bottom'])
 
 const visible = ref(false)
 const animating = ref(false)

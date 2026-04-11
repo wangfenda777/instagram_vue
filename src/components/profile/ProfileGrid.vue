@@ -1,7 +1,7 @@
 <template>
   <view class="profile-grid-wrap">
     <view v-if="items.length" class="posts-grid">
-      <view class="post-item" v-for="item in items" :key="item.id">
+      <view class="post-item" v-for="item in items" :key="item.id" @click="$emit('item-click', item)">
         <image class="post-image" :src="item.cover" mode="aspectFill" />
         <image
           v-if="showMultiIcon && Number(item.mediaCount || 0) > 1"
@@ -42,6 +42,8 @@ defineProps({
     default: false
   }
 })
+
+defineEmits(['item-click'])
 </script>
 
 <style scoped>

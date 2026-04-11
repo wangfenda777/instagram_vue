@@ -42,6 +42,7 @@
         :items="postItems"
         empty-text="暂无帖子"
         :show-multi-icon="true"
+        @item-click="onPostClick"
       />
 
       <ProfileGrid
@@ -55,15 +56,50 @@
         <text>该模块暂未开放</text>
       </view>
     </view>
+
+    <!-- 帖子详情弹窗 -->
+    <FullscreenPopup v-model:show="detailShowPopup" @scroll-top="detailLoadBefore" @scroll-bottom="detailLoadAfter">
+      <view v-if="detailLoading" class="detail-loading">
+        <text>加载中...</text>
+      </view>
+      <template v-else>
+        <view v-if="detailLoadingBefore" class="detail-status">
+          <text>加载中...</text>
+        </view>
+        <view v-else-if="!detailHasMoreBefore && detailPosts.length" class="detail-status">
+          <text>没有更新的帖子了</text>
+        </view>
+
+        <PostCard
+          v-for="p in detailPosts"
+          :key="p.id"
+          :post="p"
+          @avatar-click="detailGoUserDetail"
+          @follow="detailHandleFollow"
+          @toggle-like="detailHandleToggleLike"
+          @toggle-save="detailHandleToggleSave"
+        />
+
+        <view v-if="detailLoadingAfter" class="detail-status">
+          <text>加载中...</text>
+        </view>
+        <view v-else-if="!detailHasMoreAfter && detailPosts.length" class="detail-status">
+          <text>没有更多了</text>
+        </view>
+      </template>
+    </FullscreenPopup>
   </Layout>
 </template>
 
 <script setup>
 import Layout from '@/components/common/Layout.vue'
+import FullscreenPopup from '@/components/common/FullscreenPopup.vue'
+import PostCard from '@/components/common/PostCard.vue'
 import ProfileSummary from '@/components/profile/ProfileSummary.vue'
 import ProfileTabs from '@/components/profile/ProfileTabs.vue'
 import ProfileGrid from '@/components/profile/ProfileGrid.vue'
 import { useUserDetail } from '@/composables/useUserDetail'
+import { useUserPostsDetail } from '@/composables/useUserPostsDetail'
 
 const {
   tabs,
@@ -78,6 +114,23 @@ const {
   goFollowList
 } = useUserDetail()
 
+const {
+  showPopup: detailShowPopup,
+  posts: detailPosts,
+  loading: detailLoading,
+  loadingBefore: detailLoadingBefore,
+  loadingAfter: detailLoadingAfter,
+  hasMoreBefore: detailHasMoreBefore,
+  hasMoreAfter: detailHasMoreAfter,
+  openPost: detailOpenPost,
+  loadBefore: detailLoadBefore,
+  loadAfter: detailLoadAfter,
+  handleFollow: detailHandleFollow,
+  handleToggleLike: detailHandleToggleLike,
+  handleToggleSave: detailHandleToggleSave,
+  goUserDetail: detailGoUserDetail
+} = useUserPostsDetail()
+
 const goBack = () => {
   uni.navigateBack()
 }
@@ -87,10 +140,13 @@ const handleStatClick = (type) => {
     goFollowList(0)
     return
   }
-
   if (type === 'following') {
     goFollowList(1)
   }
+}
+
+const onPostClick = (item) => {
+  detailOpenPost(profile.value.userId, item.id)
 }
 </script>
 
@@ -172,5 +228,20 @@ const handleStatClick = (type) => {
   justify-content: center;
   font-size: 26rpx;
   color: var(--theme-secondary);
+}
+
+.detail-loading,
+.detail-status {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40rpx 0;
+  font-size: 24rpx;
+  color: var(--theme-secondary);
+}
+
+.detail-loading {
+  min-height: 400rpx;
+  font-size: 28rpx;
 }
 </style>

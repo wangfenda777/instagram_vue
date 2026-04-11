@@ -97,3 +97,14 @@ export const updateProfile = (data) => {
     data
   })
 }
+
+// 获取用户帖子详情列表（游标加载）
+export const getUserPostsDetail = (userId, postId, direction) => {
+  const params = { userId, postId }
+  if (direction) params.direction = direction
+  return request({
+    url: '/api/user/posts/detail',
+    method: 'GET',
+    data: params
+  })
+}
