@@ -5,14 +5,32 @@
       <view class="navbar-left" @click="handleBack">
         <text class="icon">←</text>
       </view>
-      <view class="navbar-title">新帖子</view>
+      <view class="navbar-title">{{ publishMode === 'image' ? '新帖子' : 'Reels' }}</view>
       <view class="navbar-right" :class="{ active: canPublish }" @click="handlePublish">
         <text>分享</text>
       </view>
     </view>
 
+    <!-- 模式切换 tab -->
+    <view class="mode-tabs">
+      <view
+        class="mode-tab"
+        :class="{ active: publishMode === 'image' }"
+        @click="switchMode('image')"
+      >
+        <text>图片</text>
+      </view>
+      <view
+        class="mode-tab"
+        :class="{ active: publishMode === 'video' }"
+        @click="switchMode('video')"
+      >
+        <text>视频</text>
+      </view>
+    </view>
+
     <!-- 图片选择区 -->
-    <view class="image-section">
+    <view v-if="publishMode === 'image'" class="image-section">
       <view class="image-grid">
         <view
           v-for="(img, index) in imageList"
@@ -27,6 +45,25 @@
         <view v-if="imageList.length < 9" class="add-image" @click="chooseImage">
           <text class="add-icon">+</text>
         </view>
+      </view>
+    </view>
+
+    <!-- 视频选择区 -->
+    <view v-else class="image-section">
+      <view v-if="videoFile" class="video-preview-wrap">
+        <video
+          class="video-preview"
+          :src="videoFile.preview"
+          controls
+          :show-fullscreen-btn="false"
+        />
+        <view class="delete-btn video-delete" @click="removeVideo">
+          <text>×</text>
+        </view>
+      </view>
+      <view v-else class="add-image add-video" @click="chooseVideo">
+        <text class="add-icon">+</text>
+        <text class="add-video-hint">选择视频（mp4/mov，最大50MB）</text>
       </view>
     </view>
 
@@ -96,11 +133,13 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { uploadImage } from '@/api/upload.js'
+import { uploadImage, uploadVideo } from '@/api/upload.js'
 import { createPost } from '@/api/post.js'
 import { usePublishTagAutocomplete } from '@/composables/usePublishTagAutocomplete.js'
 
+const publishMode = ref('image') // 'image' | 'video'
 const imageList = ref([])
+const videoFile = ref(null)
 const content = ref('')
 const location = ref('')
 const uploading = ref(false)
@@ -120,8 +159,17 @@ const {
 } = usePublishTagAutocomplete(content)
 
 const canPublish = computed(() => {
-  return imageList.value.length > 0 && !uploading.value
+  if (uploading.value) return false
+  if (publishMode.value === 'image') return imageList.value.length > 0
+  return videoFile.value !== null
 })
+
+const switchMode = (mode) => {
+  if (publishMode.value === mode) return
+  publishMode.value = mode
+  imageList.value = []
+  videoFile.value = null
+}
 
 const handleContentBlur = () => {
   setTimeout(() => {
@@ -147,14 +195,33 @@ const chooseImage = () => {
   })
 }
 
-// 删除图片
 const removeImage = (index) => {
   imageList.value.splice(index, 1)
 }
 
+// 选择视频
+const chooseVideo = () => {
+  uni.chooseVideo({
+    sourceType: ['album', 'camera'],
+    maxDuration: 60,
+    success: (res) => {
+      videoFile.value = {
+        preview: res.tempFilePath,
+        path: res.tempFilePath,
+        size: res.size
+      }
+    }
+  })
+}
+
+const removeVideo = () => {
+  videoFile.value = null
+}
+
 // 返回
 const handleBack = () => {
-  if (imageList.value.length > 0 || content.value) {
+  const hasContent = imageList.value.length > 0 || videoFile.value || content.value
+  if (hasContent) {
     uni.showModal({
       title: '提示',
       content: '确定要放弃发布吗？',
@@ -177,21 +244,35 @@ const handlePublish = async () => {
   uploadProgress.value = '0%'
 
   try {
-    const mediaUrls = []
-    for (let i = 0; i < imageList.value.length; i++) {
-      uploadProgress.value = `${i + 1}/${imageList.value.length}`
-      const file = await getFileFromPath(imageList.value[i].preview)
-      const result = await uploadImage(file)
-      mediaUrls.push(result.url)
-    }
+    if (publishMode.value === 'image') {
+      const mediaUrls = []
+      for (let i = 0; i < imageList.value.length; i++) {
+        uploadProgress.value = `${i + 1}/${imageList.value.length}`
+        const file = await getFileFromPath(imageList.value[i].preview, 'image')
+        const result = await uploadImage(file)
+        mediaUrls.push(result.url)
+      }
 
-    uploadProgress.value = '发布中...'
-    await createPost({
-      content: content.value,
-      location: location.value,
-      mediaType: 'image',
-      mediaUrls
-    })
+      uploadProgress.value = '发布中...'
+      await createPost({
+        content: content.value,
+        location: location.value,
+        mediaType: 'image',
+        mediaUrls
+      })
+    } else {
+      uploadProgress.value = '上传视频...'
+      const file = await getFileFromPath(videoFile.value.preview, 'video')
+      const result = await uploadVideo(file)
+      console.log(1111,result, file)
+      uploadProgress.value = '发布中...'
+      await createPost({
+        content: content.value,
+        location: location.value,
+        mediaType: 'video',
+        mediaUrls: [result.url]
+      })
+    }
 
     uni.showToast({ title: '发布成功', icon: 'success' })
     setTimeout(() => {
@@ -199,18 +280,22 @@ const handlePublish = async () => {
     }, 1500)
   } catch (e) {
     console.error('发布失败', e)
+    uni.showToast({ title: '发布失败，请重试', icon: 'none' })
   } finally {
     uploading.value = false
   }
 }
 
-const getFileFromPath = (path) => {
+const getFileFromPath = (path, mediaType = 'image') => {
   return new Promise((resolve, reject) => {
     if (path.startsWith('blob:')) {
       fetch(path)
         .then(res => res.blob())
         .then(blob => {
-          const file = new File([blob], 'image.jpg', { type: 'image/jpeg' })
+          const isVideo = mediaType === 'video'
+          const ext = isVideo ? 'mp4' : 'jpg'
+          const type = isVideo ? 'video/mp4' : 'image/jpeg'
+          const file = new File([blob], `file.${ext}`, { type })
           resolve(file)
         })
         .catch(reject)
@@ -225,7 +310,7 @@ const getFileFromPath = (path) => {
 .publish-page {
   min-height: 100vh;
   background: #fff;
-  padding-top: 88rpx;
+  padding-top: 132rpx;
 }
 
 .navbar {
@@ -269,6 +354,34 @@ const getFileFromPath = (path) => {
 
 .navbar-right.active {
   opacity: 1;
+}
+
+.mode-tabs {
+  position: fixed;
+  top: 88rpx;
+  left: 0;
+  right: 0;
+  height: 88rpx;
+  background: #fff;
+  border-bottom: 2rpx solid #dbdbdb;
+  display: flex;
+  z-index: 99;
+}
+
+.mode-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #8e8e8e;
+  border-bottom: 4rpx solid transparent;
+}
+
+.mode-tab.active {
+  color: #000;
+  border-bottom-color: #000;
 }
 
 .image-section {
@@ -336,6 +449,40 @@ const getFileFromPath = (path) => {
   transform: translate(-50%, -50%);
   font-size: 64rpx;
   color: #8e8e8e;
+}
+
+.add-video {
+  padding-bottom: 56%;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.add-video-hint {
+  position: absolute;
+  bottom: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 22rpx;
+  color: #8e8e8e;
+  white-space: nowrap;
+}
+
+.video-preview-wrap {
+  position: relative;
+  width: 100%;
+  border-radius: 8rpx;
+  overflow: hidden;
+}
+
+.video-preview {
+  width: 100%;
+  height: 560rpx;
+  background: #000;
+}
+
+.video-delete {
+  top: 16rpx;
+  right: 16rpx;
 }
 
 .input-section {
@@ -410,19 +557,6 @@ const getFileFromPath = (path) => {
 
 .tag-suggestion-item:last-child {
   border-bottom: none;
-}
-
-.tag-suggestion-icon {
-  width: 64rpx;
-  height: 64rpx;
-  border-radius: 50%;
-  border: 1rpx solid #dcdce0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28rpx;
-  color: #111111;
-  flex-shrink: 0;
 }
 
 .tag-suggestion-info {
