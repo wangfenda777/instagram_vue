@@ -45,11 +45,13 @@ export const unfollowUser = (data) => {
 }
 
 // 获取用户帖子列表（网格）
-export const getUserPosts = (userId, page = 1, pageSize = 18) => {
+export const getUserPosts = (userId, page = 1, pageSize = 18, mediaType) => {
+  const params = { userId, page, pageSize }
+  if (mediaType) params.mediaType = mediaType
   return request({
     url: '/api/user/posts',
     method: 'GET',
-    data: { userId, page, pageSize }
+    data: params
   })
 }
 

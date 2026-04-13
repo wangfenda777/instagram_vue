@@ -27,17 +27,14 @@ export function useProfile() {
   // 用户帖子（图片网格）
   const userPosts = ref([])
 
-  // 用户视频
-  const userVideos = ref([
-    { id: 1, cover: '/static/images/home/4.jpg', type: 'video' },
-    { id: 2, cover: '/static/images/home/5.jpg', type: 'video' }
-  ])
+  // 用户视频（Reels）
+  const userVideos = ref([])
+  const videoPage = ref(1)
+  const videoHasMore = ref(true)
+  const videoLoading = ref(false)
 
   // 关联内容（他人标记）
-  const userTagged = ref([
-    { id: 1, image: '/static/images/home/6.jpg' },
-    { id: 2, image: '/static/images/home/7.jpg' }
-  ])
+  const userTagged = ref([])
 
   // 完善主页任务
   const profileTasks = ref([
@@ -149,6 +146,29 @@ const getAvatarUrl = (avatar) => {
     }
   }
 
+  // 获取用户视频列表（Reels，分页）
+  const fetchUserVideos = async () => {
+    const info = userStore.userInfo || {}
+    if (!info.userId || videoLoading.value || !videoHasMore.value) return
+    videoLoading.value = true
+    try {
+      const data = await getUserPosts(info.userId, videoPage.value, 18, 'video')
+      const list = (data?.list || []).map(item => ({
+        id: item.postId,
+        cover: appStore.baseUrl + item.coverUrl,
+        mediaType: 'video',
+        mediaCount: item.mediaCount || 0
+      }))
+      userVideos.value.push(...list)
+      videoHasMore.value = Boolean(data?.hasMore)
+      videoPage.value++
+    } catch (e) {
+      console.error('获取用户视频失败', e)
+    } finally {
+      videoLoading.value = false
+    }
+  }
+
   // 关注用户
   const followUser = async (userId) => {
     const user = discoverUsers.value.find(u => u.id === userId)
@@ -178,6 +198,9 @@ const getAvatarUrl = (avatar) => {
   // 切换tab
   const switchTab = (index) => {
     activeTab.value = index
+    if (index === 1 && !userVideos.value.length && !videoLoading.value) {
+      fetchUserVideos()
+    }
   }
 
   onMounted(() => {
@@ -192,6 +215,9 @@ const getAvatarUrl = (avatar) => {
     activeTab,
     userPosts,
     userVideos,
+    videoHasMore,
+    videoLoading,
+    fetchUserVideos,
     userTagged,
     profileTasks,
     followUser,

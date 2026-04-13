@@ -71,6 +71,12 @@
         empty-text="暂无 Reels"
         :show-video-icon="true"
       />
+      <view v-if="activeTab === 1 && videoLoading" class="tab-status">
+        <text>加载中...</text>
+      </view>
+      <view v-else-if="activeTab === 1 && !videoHasMore && normalizedUserVideos.length" class="tab-status">
+        <text>没有更多了</text>
+      </view>
 
       <ProfileGrid
         v-else
@@ -148,6 +154,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { onReachBottom } from '@dcloudio/uni-app'
 import Layout from '@/components/common/Layout.vue'
 import FullscreenPopup from '@/components/common/FullscreenPopup.vue'
 import PostCard from '@/components/common/PostCard.vue'
@@ -169,6 +176,9 @@ const {
   activeTab,
   userPosts,
   userVideos,
+  videoHasMore,
+  videoLoading,
+  fetchUserVideos,
   userTagged,
   profileTasks,
   followUser,
@@ -203,7 +213,8 @@ const normalizedUserPosts = computed(() => userPosts.value.map(post => ({
 const normalizedUserVideos = computed(() => userVideos.value.map(post => ({
   id: post.id,
   cover: post.cover,
-  mediaType: 'video'
+  mediaType: 'video',
+  mediaCount: Number(post.mediaCount || 0)
 })))
 
 const normalizedUserTagged = computed(() => userTagged.value.map(post => ({
@@ -245,6 +256,12 @@ const handleStatClick = (type) => {
 const onPostClick = (item) => {
   detailOpenPost(userInfo.value.userId, item.id)
 }
+
+onReachBottom(() => {
+  if (activeTab.value === 1) {
+    fetchUserVideos()
+  }
+})
 </script>
 
 <style scoped>
@@ -613,5 +630,13 @@ const onPostClick = (item) => {
 .detail-loading {
   min-height: 400rpx;
   font-size: 28rpx;
+}
+
+.tab-status {
+  display: flex;
+  justify-content: center;
+  padding: 40rpx 0;
+  font-size: 24rpx;
+  color: var(--theme-secondary);
 }
 </style>
