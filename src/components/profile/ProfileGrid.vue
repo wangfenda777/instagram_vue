@@ -78,15 +78,6 @@ defineEmits(['item-click'])
   height: 28rpx;
 }
 
-.video-icon {
-  top: 50%;
-  left: 50%;
-  right: auto;
-  width: 40rpx;
-  height: 40rpx;
-  transform: translate(-50%, -50%);
-}
-
 .empty-state {
   min-height: 240rpx;
   display: flex;

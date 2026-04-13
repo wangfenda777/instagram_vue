@@ -55,7 +55,7 @@
         </scroll-view>
       </view>
 
-      <ProfileTabs v-model="activeTab" :tabs="profileTabs" />
+      <ProfileTabs :model-value="activeTab" :tabs="profileTabs" @update:model-value="switchTab" />
 
       <ProfileGrid
         v-if="activeTab === 0"

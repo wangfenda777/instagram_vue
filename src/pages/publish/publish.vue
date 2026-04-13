@@ -199,7 +199,7 @@ const removeImage = (index) => {
   imageList.value.splice(index, 1)
 }
 
-// 选择视频
+// 选择视频，选完后自动截取首帧作为封面
 const chooseVideo = () => {
   uni.chooseVideo({
     sourceType: ['album', 'camera'],
@@ -208,14 +208,40 @@ const chooseVideo = () => {
       videoFile.value = {
         preview: res.tempFilePath,
         path: res.tempFilePath,
-        size: res.size
+        size: res.size,
+        coverBlob: null
       }
+      captureVideoCover(res.tempFilePath)
     }
   })
 }
 
 const removeVideo = () => {
   videoFile.value = null
+}
+
+// 截取视频首帧作为封面
+const captureVideoCover = (videoPath) => {
+  const video = document.createElement('video')
+  video.src = videoPath
+  video.crossOrigin = 'anonymous'
+  video.currentTime = 0.1 // 取第0.1秒的帧
+
+  video.addEventListener('loadeddata', () => {
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    const ctx = canvas.getContext('2d')
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+    canvas.toBlob((blob) => {
+      if (blob && videoFile.value) {
+        videoFile.value.coverBlob = blob
+      }
+    }, 'image/jpeg', 0.8)
+  })
+
+  video.load()
 }
 
 // 返回
@@ -264,13 +290,22 @@ const handlePublish = async () => {
       uploadProgress.value = '上传视频...'
       const file = await getFileFromPath(videoFile.value.preview, 'video')
       const result = await uploadVideo(file)
-      console.log(1111,result, file)
+
+      let coverUrl = ''
+      if (videoFile.value.coverBlob) {
+        uploadProgress.value = '上传封面...'
+        const coverFile = new File([videoFile.value.coverBlob], 'cover.jpg', { type: 'image/jpeg' })
+        const coverResult = await uploadImage(coverFile)
+        coverUrl = coverResult.url
+      }
+
       uploadProgress.value = '发布中...'
       await createPost({
         content: content.value,
         location: location.value,
         mediaType: 'video',
-        mediaUrls: [result.url]
+        mediaUrls: [result.url],
+        ...(coverUrl ? { coverUrl } : {})
       })
     }
 
