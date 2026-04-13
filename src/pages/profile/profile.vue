@@ -139,6 +139,7 @@
           @follow="detailHandleFollow"
           @toggle-like="detailHandleToggleLike"
           @toggle-save="detailHandleToggleSave"
+          @more-click="showMoreMenu"
         />
 
         <view v-if="detailLoadingAfter" class="detail-status">
@@ -200,8 +201,21 @@ const {
   handleFollow: detailHandleFollow,
   handleToggleLike: detailHandleToggleLike,
   handleToggleSave: detailHandleToggleSave,
-  goUserDetail: detailGoUserDetail
+  goUserDetail: detailGoUserDetail,
+  handleDeletePost: detailHandleDeletePost
 } = useUserPostsDetail()
+
+const showMoreMenu = (postId) => {
+  uni.showActionSheet({
+    itemList: ['删除帖子'],
+    itemColor: '#ED4956',
+    success: (res) => {
+      if (res.tapIndex === 0) {
+        detailHandleDeletePost(postId)
+      }
+    }
+  })
+}
 
 const normalizedUserPosts = computed(() => userPosts.value.map(post => ({
   id: post.id,

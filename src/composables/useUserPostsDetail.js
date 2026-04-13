@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { getUserPostsDetail } from '@/api/user.js'
-import { likePost, unlikePost, savePost, unsavePost } from '@/api/post.js'
+import { likePost, unlikePost, savePost, unsavePost, deletePost } from '@/api/post.js'
 import { followUser as followUserApi } from '@/api/user.js'
 import { useAppStore } from '@/pinia/modules/appStore.js'
 import { useUserStore } from '@/pinia/modules/userStore.js'
@@ -33,6 +33,7 @@ export function useUserPostsDetail() {
     avatar: normalizeUrl(item.avatar),
     isVerified: Boolean(item.isVerified),
     showFollow: false,
+    mediaList: (item.mediaList || []).map(m => ({ url: normalizeUrl(m.url), type: m.type || 'image' })),
     images: (item.mediaList || []).map(m => normalizeUrl(m.url)),
     likesCount: Number(item.likesCount || 0),
     commentsCount: Number(item.commentsCount || 0),
@@ -188,6 +189,31 @@ export function useUserPostsDetail() {
     })
   }
 
+  const handleDeletePost = async (postId) => {
+    const post = posts.value.find(p => p.id === postId)
+    if (!post) return
+
+    // 二次确认
+    const delPostId = post.id
+    uni.showModal({
+      title: '提示',
+      content: '确定要删除此帖子吗？',
+      success: async (res) => {
+        if (!res.confirm) return
+        try {
+          await deletePost({ postId: delPostId })
+          // 从列表中移除
+          posts.value = posts.value.filter(p => p.id !== delPostId)
+          triggerFeedback({ id: delPostId }, 'deleted')
+          uni.showToast({ title: '删除成功', icon: 'success' })
+        } catch (e) {
+          console.error('删除失败', e)
+          uni.showToast({ title: '删除失败', icon: 'none' })
+        }
+      }
+    })
+  }
+
   return {
     showPopup,
     posts,
@@ -203,7 +229,8 @@ export function useUserPostsDetail() {
     handleFollow,
     handleToggleLike,
     handleToggleSave,
-    goUserDetail
+    goUserDetail,
+    handleDeletePost
   }
 }
 

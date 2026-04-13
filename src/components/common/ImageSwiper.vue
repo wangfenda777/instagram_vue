@@ -8,15 +8,24 @@
       :autoplay="false"
       :circular="false"
     >
-      <swiper-item v-for="(img, index) in images" :key="index">
-        <image class="swiper-image" :src="img" mode="aspectFill" />
+      <swiper-item v-for="(item, index) in normalizedList" :key="index">
+        <video
+          v-if="item.type === 'video'"
+          class="swiper-video"
+          :src="item.url"
+          :controls="true"
+          :show-center-play-btn="true"
+          :enable-progress-gesture="true"
+          object-fit="cover"
+        />
+        <image v-else class="swiper-image" :src="item.url" mode="aspectFill" />
       </swiper-item>
     </swiper>
     <!-- 指示点 -->
-    <view class="dots" v-if="images.length > 1">
+    <view class="dots" v-if="normalizedList.length > 1">
       <view
         class="dot"
-        v-for="(img, index) in images"
+        v-for="(item, index) in normalizedList"
         :key="index"
         :class="{ active: index === current }"
       />
@@ -25,13 +34,25 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
-defineProps({
+const props = defineProps({
   images: {
     type: Array,
     default: () => []
+  },
+  mediaList: {
+    type: Array,
+    default: () => []
   }
+})
+
+// 优先使用 mediaList（带 type），兼容旧的纯 images 数组
+const normalizedList = computed(() => {
+  if (props.mediaList && props.mediaList.length) {
+    return props.mediaList
+  }
+  return props.images.map(url => ({ url, type: 'image' }))
 })
 
 const current = ref(0)
@@ -53,6 +74,11 @@ function onChange(e) {
 }
 
 .swiper-image {
+  width: 100%;
+  height: 100%;
+}
+
+.swiper-video {
   width: 100%;
   height: 100%;
 }

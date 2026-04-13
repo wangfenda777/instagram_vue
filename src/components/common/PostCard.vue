@@ -16,13 +16,13 @@
         <view class="follow-btn" v-if="post.showFollow" @click="$emit('follow', post.id)">
           <text class="follow-text">关注</text>
         </view>
-        <text class="post-more">•••</text>
+        <view class="post-more" @click="$emit('more-click', post.id)">•••</view>
       </view>
     </view>
 
     <!-- 图片轮播 -->
     <view class="post-images">
-      <ImageSwiper :images="post.images" />
+      <ImageSwiper :images="post.images" :media-list="post.mediaList" />
     </view>
 
     <!-- 操作栏 -->
@@ -88,7 +88,7 @@ const props = defineProps({
   post: { type: Object, required: true }
 })
 
-defineEmits(['avatar-click', 'follow', 'toggle-like', 'toggle-save'])
+defineEmits(['avatar-click', 'follow', 'toggle-like', 'toggle-save', 'more-click'])
 
 const expanded = ref(false)
 
