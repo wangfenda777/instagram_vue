@@ -24,8 +24,15 @@ This is a uni-app + Vue 3 mobile-style Instagram clone using Vite, Pinia, and ax
   - `pages/index/index` — home feed
   - `pages/explore/explore` — explore/search
   - `pages/publish/publish` — post creation
-  - `pages/messages/messages` — messages/reels-style tab placeholder
+  - `pages/messages/messages` — placeholder (just shows "消息" text)
   - `pages/profile/profile` — current user profile
+- Sub-pages (non-tab, navigated via `uni.navigateTo`):
+  - `pages/login/login` — authentication
+  - `pages/profile/edit-profile` — edit profile fields
+  - `pages/profile/edit-field` — single field editor
+  - `pages/profile/follow-list` — followers/following list
+  - `pages/user-detail/user-detail` — other user's profile
+  - `pages/search-overview/search-overview` — filtered search results
 
 ### Page pattern: view in `pages/`, state/data logic in `composables/`
 The codebase generally splits page rendering from business/data logic:
@@ -37,6 +44,9 @@ Examples:
 - `src/pages/profile/profile.vue` uses `src/composables/useProfile.js`
 - `src/pages/profile/follow-list.vue` uses `src/composables/useFollowList.js`
 - `src/pages/explore/explore.vue` uses `src/composables/useExplore.js`
+- `src/pages/user-detail/user-detail.vue` uses `src/composables/useUserDetail.js`
+- `src/pages/search-overview/search-overview.vue` uses `src/composables/useSearchOverview.js`
+- `src/pages/publish/publish.vue` uses `src/composables/usePublish.js` and `src/composables/usePublishTagAutocomplete.js`
 
 When implementing new page behavior, prefer extending the matching composable instead of putting async/network/state orchestration directly into the page SFC.
 
@@ -55,7 +65,7 @@ Implications:
 
 Exceptions:
 - `src/api/auth.js` uses raw `axios.post` for token refresh to avoid interceptor loops.
-- `src/api/upload.js` also uses raw axios with `FormData` for image/avatar uploads.
+- `src/api/upload.js` also uses raw axios with `FormData` for image/avatar/video uploads.
 
 ### Global state
 Pinia stores live in `src/pinia/modules/`.
@@ -88,15 +98,20 @@ Examples:
 - `src/composables/useHome.js` shapes stories and feed posts for the home page
 - `src/composables/useFollowList.js` normalizes follow/follower user rows and handles paginated tab state
 - `src/composables/useProfile.js` merges persisted auth user info with server stats/discover lists
+- `src/composables/useUserPostsDetail.js` normalizes post data and manages bidirectional scroll loading
 
 When adding features, keep normalization close to the fetching logic in the composable.
 
 ### Current functional areas
 - Home feed: stories + post feed + follow action (`useHome.js`, `api/story.js`, `api/post.js`)
-- Explore: currently mixes a local mock waterfall with server-backed search (`useExplore.js`, `api/search.js`)
-- Auth/login: login stores tokens, then fetches `/api/user/me` and persists user info (`useLogin.js`)
+- Explore: recommended posts in waterfall layout + search mode (`useExplore.js`, `api/explore.js`, `api/search.js`)
+- Auth/login: login stores tokens, then fetches `/api/user/me` and persists user info (`useLogin.js`, `api/auth.js`)
 - Profile: stats, discover users, posts grid, followers/following (`useProfile.js`, `useFollowList.js`, `api/user.js`)
-- Publish: image selection + upload + create post (`pages/publish/publish.vue`, `api/upload.js`, `api/post.js`)
+- User detail: view other users' profiles with follow/unfollow (`useUserDetail.js`, `api/user.js`)
+- Publish: image/video selection + upload + create post with hashtag autocomplete (`usePublish.js`, `usePublishTagAutocomplete.js`, `api/upload.js`, `api/post.js`)
+- Post detail: full-screen post viewer with like/save/delete actions (`usePostDetail.js`, `useUserPostsDetail.js`, `api/post.js`)
+- Search: multi-tab search results (Recommend/Account/Tag) (`useSearchOverview.js`, `api/search.js`)
+- Action feedback: visual animations for like/save interactions (`useActionFeedback.js`)
 
 ## Repository-specific guidance
 
